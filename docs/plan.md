@@ -881,3 +881,6 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 | D23 | DB-Enum-Werte als `VARCHAR`, nicht als `ENUM` | Ein neuer Wert braucht dann keinen Tabellen-Umbau |
 | D24 | Pydantic-Modelle mit `--collapse-root-models`, `if`/`then`-Regeln nur im JSON-Schema | Der Generator übersetzt bedingte Regeln nicht, die API prüft mit jsonschema |
 | D25 | Generator-Kopie mit Punkt-losen Dateinamen für Pydantic | `common.schema.json` führt sonst zu falschen relativen Imports |
+| D26 | Ingest-Endpunkte zusätzlich `forecast-configs` und `wind-observations` | Ohne Konfigurationsversion schlägt der Fremdschlüssel des Laufs fehl, Winddaten sind in Plan Abschnitt 9 vorgesehen, fehlen aber in Abschnitt 8 |
+| D27 | Idempotenz über Unique-Schlüssel je Tabelle, erster Wert gewinnt | observation und wind_observation (Zeit, Quelle), source_heartbeat (Quelle, Zeit), forecast_run (Datum, Lauf-Nummer), forecast (Lauf, Fensterbeginn, Modell), job_run (Korrelations-ID, aktualisiert Status), forecast_evaluation (Berechnung, Fenster, Zeitraum, Konfiguration, Klasse, Tag) |
+| D28 | `lead_day` ist 0 bei Klassenwerten statt NULL | MySQL erlaubt mehrere NULL in Unique-Schlüsseln, die Idempotenz griffe sonst bei Klassenwerten nicht |

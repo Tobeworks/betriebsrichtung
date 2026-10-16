@@ -11,9 +11,9 @@ export interface AuswertungDerPrognosegute {
    */
   lead_class: "1_tag" | "2_3_tage" | "4_7_tage" | "8_14_tage";
   /**
-   * Vorlauftag 1 bis 14 für die Unsicherheitsgrenze, null bei Klassenwerten.
+   * Vorlauftag 1 bis 14 für die Unsicherheitsgrenze, 0 bei Klassenwerten. Kein NULL, damit die Eindeutigkeit greift.
    */
-  lead_day: number | null;
+  lead_day: number;
   /**
    * Ein Zeitfenster oder alle Fenster zusammen.
    */

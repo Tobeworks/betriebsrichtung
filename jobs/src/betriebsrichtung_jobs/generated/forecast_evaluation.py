@@ -50,9 +50,9 @@ class AuswertungDerPrognosegTe(BaseModel):
         ...,
         description='Vorlaufklasse. Die Grenzen der Klassen sind Obergrenzen, die Beschriftung nennt den Vorlauf ab Fensterbeginn.',
     )
-    lead_day: Optional[conint(ge=1, le=14)] = Field(
+    lead_day: conint(ge=0, le=14) = Field(
         ...,
-        description='Vorlauftag 1 bis 14 für die Unsicherheitsgrenze, null bei Klassenwerten.',
+        description='Vorlauftag 1 bis 14 für die Unsicherheitsgrenze, 0 bei Klassenwerten. Kein NULL, damit die Eindeutigkeit greift.',
     )
     window_kind: common.Fensterart
     period: Period
