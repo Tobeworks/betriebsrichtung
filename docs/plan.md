@@ -887,3 +887,5 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 | D29 | Observation-Logger in Phase 4 ist ein METAR-Winddaten-Logger, keine Richtungsquelle | Umwelthaus ist ohne Erlaubnis nicht nutzbar, ADS-B und D-ATIS sind ungeprüft (`docs/datenquellen.md`) |
 | D30 | `init_time` ist der Abrufzeitpunkt, nicht der Modelllauf | Die Ensemble-Antwort von Open-Meteo liefert den Initialisierungszeitpunkt nicht |
 | D31 | Rohdaten-Archiv erst nach angelegtem Lauf, je Lauf eine Datei | Wiederholte Aufrufe würden sonst Rohdaten eines vorhandenen Laufs überschreiben |
+| D32 | Zeitachse liest `slot_actual` für vergangene Fenster und den neuesten `blend`-Lauf für zukünftige, Fenster ohne Wahrheit fehlen in der Antwort | Der Slot-Job (Phase 5) ist noch nicht gebaut, Beobachtungen für Richtungen fehlen ohnehin, Lücken werden nicht als West ausgegeben |
+| D33 | Lesen ohne Token, Antwort mit `Cache-Control: public, max-age=300` | Plan Abschnitt 8, Zwischenspeicher für die Anzeige |
