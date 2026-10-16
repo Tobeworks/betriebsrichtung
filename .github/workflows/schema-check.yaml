@@ -1,0 +1,50 @@
+name: Schema-Abgleich
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  schema-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: API-Repository mit Schemas auschecken
+        uses: actions/checkout@v4
+        with:
+          repository: tobeworks/api
+          token: ${{ secrets.API_REPO_TOKEN }}
+          path: api
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generator-Abhängigkeiten installieren
+        run: pip install datamodel-code-generator==0.26.3
+
+      - name: Typen und Modelle neu erzeugen
+        env:
+          SCHEMA_DIR: api/schemas/betriebsrichtung
+        run: python scripts/generate_types.py
+
+      - name: Abweichung der erzeugten Typen prüfen
+        run: |
+          if [ -n "$(git status --porcelain -- frontend/src/api/generated jobs/src/betriebsrichtung_jobs/generated)" ]; then
+            git status --porcelain -- frontend/src/api/generated jobs/src/betriebsrichtung_jobs/generated
+            echo "Erzeugte Typen weichen von den Schemas ab, bitte scripts/generate_types.py ausführen und committen."
+            exit 1
+          fi
+
+      - name: Migration gegen das Schema prüfen
+        run: python api/scripts/betriebsrichtung_ddl.py --pruefen

@@ -91,7 +91,7 @@ Gemeinsame Typen: Die generierten TypeScript-Typen und Pydantic-Modelle werden a
 Alle Angaben zu externen Schnittstellen vor der Nutzung gegen die aktuelle Doku prüfen, sie stammen aus dem Gedächtnis. Jede Quelle bekommt in `docs/datenquellen.md` einen Steckbrief (URL, Format, Limits, Lizenz, Stabilität, Testabruf, Entscheidung).
 
 1. **Ensemble-Winddaten:** Open-Meteo Ensemble API (https://open-meteo.com). Parameter: Windrichtung und Windgeschwindigkeit in 10 m, stündlich, für die Koordinaten des Flughafens (ca. 50.04 N, 8.56 E). Mehrere Modelle und jeweils alle Ensemble-Läufe abrufen.
-   - Zu prüfende Modellkandidaten (Namen, Mitgliederzahl, Horizont vorher gegen die Doku verifizieren): ICON (global, EU, D2), GFS (Ensemble, ca. 30 Mitglieder plus Kontrolllauf, Horizont bis ca. 16 Tage), ECMWF IFS (ca. 50 Mitglieder plus Kontrolllauf, Horizont bis ca. 15 Tage), GEM global ensemble, optional UKMO und BOM.
+   - Zu prüfende Modellkandidaten (Namen, Mitgliederzahl, Horizont vorher gegen die Doku verifizieren): ICON (global, EU, D2), GFS (Ensemble, 30 Mitglieder plus Kontrolllauf, Horizont 10 Tage, laut Phase-0-Prüfung korrigiert), ECMWF IFS (ca. 50 Mitglieder plus Kontrolllauf, Horizont bis ca. 15 Tage), GEM global ensemble, optional UKMO und BOM.
    - Wichtig für 14 Tage: ICON-D2 und ICON-EU reichen nur wenige Tage, ICON global etwa eine Woche. Jenseits davon tragen nur GFS, ECMWF und GEM. Beim Wegfall von Modellen ändert sich die Mitgliederzahl, die Wahrscheinlichkeit kann dadurch springen. Gegenmittel: Modellgewichte statt gepoolter Mitglieder (4c) und Glättung der Übergänge.
    - Parameter, die zu prüfen sind: `models`, `hourly=wind_speed_10m,wind_direction_10m`, Einheit `wind_speed_unit=kn` (Knoten, damit Schwellen direkt lesbar sind), `timezone=UTC`, `forecast_days`, Benennung der Mitgliedsspalten (`..._member01` und so weiter, Kontrolllauf ohne Suffix). Optional `wind_gusts_10m` und `wind_speed_100m` als Zusatzmerkmale.
    - Nutzungsbedingungen: Die freie Nutzung ist laut Doku für nicht-kommerzielle Zwecke gedacht, mit Namensnennung (CC BY 4.0) und Abrufgrenzen pro Minute, Stunde und Tag. Kommerzielle Nutzung verlangt ein Abo mit API-Key. Einordnen, ob eine öffentliche App unter dem Tobeworks-Namen als kommerziell gilt. Die gewichteten Abrufe (Variablen mal Tage mal Modelle) einplanen, ein Lauf pro Modell hält die Anfragen klein.
@@ -298,7 +298,7 @@ Erzeugt versionierte Migrationen aus Schema und aktuellem Datenbankstand, inklus
 
 ## 8. API-Endpunkte (in der bestehenden API)
 
-Neues Modul `api/api_betriebsrichtung.py` als Blueprint unter dem Präfix `/betriebsrichtung/v1`, im Stil der bestehenden Module. CORS-Eintrag für die Frontend-Domains in `server.py`. Authentifizierung, Fehlerformat und Pagination nach bestehender Konvention der API (Phase 0).
+Neues Modul `api/api_betriebsrichtung.py` mit Resource-Klassen (kein Blueprint, so sind die bestehenden Module gebaut), registriert in `server.py` unter dem Präfix `/betriebsrichtung/v1`. Details in `docs/api-konventionen.md`. CORS-Eintrag für die Frontend-Domains in `server.py`. Authentifizierung, Fehlerformat und Pagination nach bestehender Konvention der API (Phase 0).
 
 **Schreiben (nur Jobs, Token-geschützt, idempotent):**
 
@@ -834,8 +834,8 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 
 | Nr. | Frage | Empfehlung |
 |---|---|---|
-| 1 | Welche Quelle liefert verlässlich Beobachtungen und Historie (Ergebnis aus Abschnitt 3)? | Offen bis zur Recherche, Quellenleiter beachten |
-| 2 | Gibt es in der API bereits ein Schema-Ablagekonzept und einen Migrationsmechanismus? | Teilweise beantwortet (2a), Rest in Phase 0 |
+| 1 | Welche Quelle liefert verlässlich Beobachtungen und Historie (Ergebnis aus Abschnitt 3)? | Teilweise beantwortet (`docs/datenquellen.md`): Wind-Beobachtung über METAR EDDF (aviationweather.gov) als Primärquelle, Testabruf noch offen. Aktuelle Betriebsrichtung: Umwelthaus ohne Schnittstelle, nicht scrapen. Netzwerk-Check der Umwelthaus-Seite offen |
+| 2 | Gibt es in der API bereits ein Schema-Ablagekonzept und einen Migrationsmechanismus? | Beantwortet (`docs/api-konventionen.md`): Schemas als Dateien, Migrationen von Hand ohne Runner und ohne Migrationstabelle, Schreib-Token fehlt und wird neu eingeführt |
 | 3 | Auflösung der Historie: Zeitfenster, Stunden oder nur Tage? | Rohdaten als Wechselereignisse (zeitgenau), Anzeige und Statistik je Zeitfenster, Tageswerte abgeleitet |
 | 4 | Nur privat nutzbar oder später öffentlich? | Zunächst Staging hinter Zugriffsschutz (Basic Auth über Traefik-Middleware) und Produktion lesbar, aber `noindex` bis Rechtstexte stehen. Architektur ist von Anfang an öffentlich lesbar gedacht |
 | 5 | Domain und Name der App | `betriebsrichtung.tobeworks.de` (Staging), Produktionsdomain offen |
@@ -843,8 +843,8 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 | 7 | Definition "Fenster ist Ost": Mehrheit der Zeit (über 50 Prozent)? | Ja, zusätzlich `expected_east_share` ausliefern |
 | 8 | Umgang mit dem Nachtfenster | Ausweisen, getrennt bewerten, bei fehlenden Daten `gap` |
 | 9 | Jobs als Kubernetes-CronJobs oder Cron auf dem vorhandenen Server? | Kubernetes-CronJobs |
-| 10 | Dürfen Daten von Umwelthaus/Fraport automatisiert abgerufen und gespeichert werden? | Vorab Nutzungsbedingungen prüfen, im Zweifel beim Betreiber anfragen |
-| 11 | Open-Meteo: freie Nutzung zulässig oder Abo mit API-Key? | Zunächst frei (privat), bei öffentlicher Nutzung neu bewerten |
+| 10 | Dürfen Daten von Umwelthaus/Fraport automatisiert abgerufen und gespeichert werden? | Umwelthaus: keine Nutzungsbedingungen und keine Schnittstelle auf der Seite, daher kein Scraping. Erlaubnis beim Betreiber erfragen (Entwurf in `docs/datenquellen.md`). Fraport noch nicht geprüft |
+| 11 | Open-Meteo: freie Nutzung zulässig oder Abo mit API-Key? | Die freie API ist nur nichtkommerziell (CC BY 4.0, 600 Aufrufe pro Minute, 10 000 pro Tag, kein Key). Ein öffentlicher Betrieb unter dem Tobeworks-Namen gilt wahrscheinlich als kommerziell, Entscheidung durch Tobias nötig. Bis dahin nur privater Betrieb oder Staging |
 | 12 | Ansprache in Texten (neutral, du oder Sie) | Sachlich ohne direkte Anrede |
 | 13 | Zugriff auf die API von außen: Lesen offen oder mit Token? | Lesen offen, Schreiben nur mit Token, Rate-Limit |
 | 14 | Wo liegt das Roh-Archiv der Ensemble-Läufe (Persistent Volume oder Objektspeicher)? | Persistent Volume im Cluster, Sicherung einbeziehen |
@@ -869,3 +869,15 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 | D11 | Utility-Übersicht in `docs/frontend.md` statt Kommentarblock | Vorgabe "keine Kommentare im Code" geht vor |
 | D12 | Roh-Archiv der Ensemble-Läufe außerhalb von MySQL | Mengen sind klein, MySQL bleibt schlank, spätere Neuberechnung möglich |
 | D13 | Staging und Produktion teilen eine Daten-Pipeline | Doppelte Jobs würden Daten verdoppeln und die Quelllimits belasten |
+| D14 | Kein Blueprint, Resource-Klassen in `api_betriebsrichtung.py`, registriert in `server.py` | So sind alle bestehenden Module gebaut (Phase 0, `docs/api-konventionen.md`) |
+| D15 | Schreibzugriffe mit eigenem Token (`BETRIEBSRICHTUNG_INGEST_TOKEN`), nicht mit `login_required` | `login_required` lässt jede Benutzer-JWT durch, Jobs brauchen einen eigenen Schlüssel |
+| D16 | Fehlerformat `{"status": 0, "error": ..., "code": ...}` | Bestand nutzt `status` und `error`, das Feld `code` ist neu und additiv |
+| D17 | Paginierung über `limit` (Standard 100, Höchstwert 500) und `after_id`, kein Offset | Offset verschiebt bei wachsenden Tabellen Zeilen |
+| D18 | Wind-Beobachtung über METAR EDDF als Primärquelle, Umwelthaus nicht scrapen | METAR hat offene Limits (100 pro Minute) und dokumentierte Abfrage. Umwelthaus liefert keine Schnittstelle und keine Nutzungsbedingungen |
+| D19 | Modell-IDs in `forecast.json`: `ecmwf_ifs025`, `gfs025` bestätigt, `icon_global` ersetzen durch `icon_seamless_eps` (bestätigt) | Testabruf der Open-Meteo Ensemble API am 16.10.2026 |
+| D20 | Logging mit Standardbibliothek `logging` als JSON, nicht `print()` | Bestand hat rund 48 `print()`-Aufrufe und kein Logging, die neuen Module brauchen Korrelations-IDs |
+| D21 | Neue Migrationen mit Datum, Nummer und Tabelle `schema_migrations` | Bestand hat keine Nummerierung und keinen Runner, die Kette muss nachvollziehbar sein |
+| D22 | Schema-Version in jeder Entitätsdatei als Annotation `x-schema-version`, in Antworten als Feld `schema` | Entitäten sind Tabellenzeilen, ein Pflichtfeld `schema` dort wäre eine Spalte ohne Nutzen |
+| D23 | DB-Enum-Werte als `VARCHAR`, nicht als `ENUM` | Ein neuer Wert braucht dann keinen Tabellen-Umbau |
+| D24 | Pydantic-Modelle mit `--collapse-root-models`, `if`/`then`-Regeln nur im JSON-Schema | Der Generator übersetzt bedingte Regeln nicht, die API prüft mit jsonschema |
+| D25 | Generator-Kopie mit Punkt-losen Dateinamen für Pydantic | `common.schema.json` führt sonst zu falschen relativen Imports |
