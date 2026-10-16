@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "version": 1,
+  "airport": { "icao": "EDDF", "latitude": 50.04, "longitude": 8.56 },
+  "axis": { "east_landing_deg": 70, "west_landing_deg": 250 },
+  "decision": {
+    "east_on_tailwind_kn": 5,
+    "west_back_tailwind_kn": 2,
+    "smoothing_hours": 3,
+    "min_dwell_hours": 2,
+    "slot_majority": 0.5
+  },
+  "models": [
+    { "id": "ecmwf_ifs025", "weights": { "d0_2": 1.0, "d3_7": 1.0, "d8_14": 1.0 } },
+    { "id": "gfs025", "weights": { "d0_2": 0.7, "d3_7": 0.8, "d8_14": 1.0 } },
+    { "id": "icon_seamless_eps", "weights": { "d0_2": 1.0, "d3_7": 0.8, "d8_14": 0.0 } }
+  ],
+  "calibration": { "method": "none", "min_samples": 150 },
+  "limits": { "probability_min": 0.02, "probability_max": 0.98 }
+}
