@@ -1,0 +1,48 @@
+import type { AntwortZeitachse } from "./generated/timeline.response";
+
+export const beispielZeitachse = {
+  schema: 1,
+  generated_at: "2026-10-16T18:05:00.000Z",
+  data_through: "2026-10-16T18:00:00.000Z",
+  timezone: "Europe/Berlin",
+  skill_horizon_days: 7,
+  skill_horizon_provisional: true,
+  items: [
+    {
+      status: "observed",
+      local_date: "2026-10-15",
+      slot: "afternoon",
+      start: "2026-10-15T12:00:00.000Z",
+      end: "2026-10-15T20:00:00.000Z",
+      runway_direction: "west",
+      east_share: 0,
+      source: "umwelthaus",
+    },
+    {
+      status: "forecast",
+      local_date: "2026-10-18",
+      slot: "morning",
+      start: "2026-10-18T04:00:00.000Z",
+      end: "2026-10-18T12:00:00.000Z",
+      p_east: 0.62,
+      p_east_raw: 0.71,
+      lead_hours: 58,
+      computed_at: "2026-10-16T05:40:00.000Z",
+      members: 142,
+      calibrated: false,
+    },
+    {
+      status: "forecast",
+      local_date: "2026-10-18",
+      slot: "afternoon",
+      start: "2026-10-18T12:00:00.000Z",
+      end: "2026-10-18T20:00:00.000Z",
+      p_east: 0.18,
+      p_east_raw: 0.18,
+      lead_hours: 66,
+      computed_at: "2026-10-16T05:40:00.000Z",
+      members: 142,
+      calibrated: false,
+    },
+  ],
+} satisfies AntwortZeitachse;
