@@ -16,9 +16,7 @@ export class ApiFehler extends Error {
 
 const basis = String(import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
 
-export function apiVerbunden(): boolean {
-  return basis !== "";
-}
+export const beispielModus = import.meta.env.VITE_BEISPIELDATEN === "true";
 
 export function holeZeitachse(von: string, bis: string, signal?: AbortSignal): Promise<AntwortZeitachse> {
   const abfrage = new URLSearchParams({ from: von, to: bis });

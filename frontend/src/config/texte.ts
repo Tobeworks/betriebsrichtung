@@ -4,7 +4,7 @@ export const texte = {
   zurMethodik: "Wie die Prognose entsteht",
   verlaufUntertitel: "Verlauf und Prognose",
   verlaufTitel: "Betriebsrichtung am Flughafen Frankfurt",
-  beispielHinweis: "Es werden Beispieldaten angezeigt, weil noch keine Verbindung zur API eingerichtet ist.",
+  beispielHinweis: "Es werden Beispieldaten angezeigt (VITE_BEISPIELDATEN ist gesetzt).",
   laedt: "Die Zeitachse wird geladen.",
   leer: "Für diesen Zeitraum liegen keine Einträge vor.",
   erneutVersuchen: "Erneut versuchen",

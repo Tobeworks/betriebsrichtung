@@ -1,7 +1,8 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { createMemoryHistory } from "vue-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App.vue";
+import { beispielZeitachse } from "./api/fixtures";
 import { erstelleRouter } from "./router";
 
 async function oeffne(pfad: string) {
@@ -15,13 +16,24 @@ async function oeffne(pfad: string) {
 
 Object.defineProperty(window, "scrollTo", { value: () => undefined, writable: true });
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("App", () => {
-  it("bietet den Sprunglink und zeigt die Startseite mit Beispieldaten", async () => {
+  it("bietet den Sprunglink und zeigt die Zeitachse aus der API", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(beispielZeitachse), { status: 200 })));
     const wrapper = await oeffne("/");
     expect(wrapper.text()).toContain("Zum Inhalt springen");
     expect(wrapper.find("h1").text()).toContain("Betriebsrichtung");
-    expect(wrapper.text()).toContain("Beispieldaten");
     expect(wrapper.findAll("li").length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("zeigt bei fehlender Verbindung eine Fehlermeldung statt Beispieldaten", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))));
+    const wrapper = await oeffne("/");
+    expect(wrapper.find('[role="alert"]').text()).toContain("Die Verbindung ist fehlgeschlagen.");
+    expect(wrapper.text()).not.toContain("Beispieldaten");
   });
 
   it("zeigt für unbekannte Pfade die 404-Seite", async () => {

@@ -1,5 +1,5 @@
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { ApiFehler, apiVerbunden, holeZeitachse } from "../api/client";
+import { ApiFehler, beispielModus, holeZeitachse } from "../api/client";
 import { beispielZeitachse } from "../api/fixtures";
 import type { AntwortZeitachse } from "../api/generated/timeline.response";
 import { texte } from "../config/texte";
@@ -19,7 +19,7 @@ export function useZeitachse() {
   const daten = ref<AntwortZeitachse | null>(null);
   const laedt = ref(true);
   const fehler = ref<string | null>(null);
-  const beispiel = !apiVerbunden();
+  const beispiel = beispielModus;
   let steuerung: AbortController | null = null;
 
   async function laden(): Promise<void> {
