@@ -57,7 +57,7 @@ export const methodik: Abschnitt[] = [
     liste: [
       "Kalibrierung: Die Wahrscheinlichkeiten sind noch nicht anhand früherer Vergleiche nachjustiert. Sie werden roh ausgegeben.",
       "Prognosegüte: Wie gut die Prognose früher war, wird erst gemessen, sobald genug Vergleiche vorliegen. Bis dahin ist jede Angabe vorläufig.",
-      "Vergangene Tage: Der tatsächliche Betrieb wird erst angezeigt, wenn eine freigegebene Quelle für die Betriebsrichtung angebunden ist.",
+      "Vergangene Tage: Der tatsächliche Betrieb wird erst angezeigt, wenn eine Quelle für die Betriebsrichtung angebunden ist.",
       "Nicht berücksichtigt sind Gewitter, tiefe Wolken, Bauarbeiten, Bahnsperrungen, Lärmpausen und Sonderfälle der Flugsicherung.",
     ],
   },
@@ -66,7 +66,7 @@ export const methodik: Abschnitt[] = [
     absaetze: [
       "Wetterdaten: Open-Meteo.com, Lizenz CC BY 4.0.",
       "Winddaten am Flughafen: Meldungen der Station EDDF über aviationweather.gov.",
-      "Die Betriebsrichtung selbst stammt bisher aus keiner freigegebenen Quelle. Geprüft wurde die Anbindung der Umwelthaus-Seite, sie ist aber noch nicht genutzt.",
+      "Die Betriebsrichtung selbst wird bisher nicht beobachtet, sondern aus dem Wind abgeleitet. Eine Quelle für die tatsächlich geflogene Richtung ist noch nicht angebunden.",
     ],
   },
   {

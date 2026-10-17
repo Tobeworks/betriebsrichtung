@@ -102,7 +102,7 @@ Note: `VITE_API_BASE` is compiled into the bundle. Changing it requires a new bu
 
 ```
 frontend/
-  index.html               Entry document (title, description, robots noindex, manifest)
+  index.html               Entry document (title, description, canonical, Open Graph, JSON-LD, manifest)
   src/
     main.ts                Entry point: font, global styles, router, app mount
     App.vue                Layout: skip link, header, main, bottom navigation, footer
@@ -250,7 +250,7 @@ A Content Security Policy is not set yet. It needs the API origin, see [Known li
 - Texts are kept in `src/config/` and `src/config/texte.ts`. They are in German, because the audience is German-speaking. Do not scatter strings across components.
 - The method page explains the calculation in plain language and lists what is not modelled yet.
 - The imprint and privacy policy describe what the app actually does: no cookies, no analytics, no forms, self-hosted font. If you add a feature that stores or sends data, update `src/config/rechtliches.ts` first.
-- The app is marked `noindex` (meta tag and `robots.txt`) while it is private.
+- The app is indexable: no `noindex` meta tag, `robots.txt` allows everything and points to `sitemap.xml`. The sitemap lists only pages with their own content, so add a page there when a placeholder page gets real content.
 
 ## Known limitations
 

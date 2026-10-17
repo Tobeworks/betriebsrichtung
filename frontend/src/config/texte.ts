@@ -22,7 +22,6 @@ export const texte = {
   nichtGefundenText: "Diese Adresse gibt es nicht. Die Startseite erreichst du hier:",
   zurStartseite: "Zur Startseite",
   inArbeit: "Diese Seite folgt in einer späteren Ausbaustufe.",
-  rechtsPlatzhalter: "Dieser Text wird vor dem öffentlichen Betrieb ergänzt.",
   datenschutzText: "Diese Seite setzt keine Cookies und kein Tracking. Es werden keine externen Schriften oder Skripte geladen.",
   heute: "Heute",
   jetzt: "Jetzt",

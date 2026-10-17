@@ -1,2 +1,4 @@
 User-agent: *
-Disallow: /
+Allow: /
+
+Sitemap: https://betriebsrichtung-frankfurt.tobeworks.de/sitemap.xml

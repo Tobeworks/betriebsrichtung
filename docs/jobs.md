@@ -46,7 +46,7 @@ Die Bandgrenzen sind vorläufig. Sie wurden gegen die 15 Fenster der Umwelthaus-
 
 ## Bekannte Grenzen (ehrlich)
 
-- **Keine Richtungsbeobachtung.** Umwelthaus ist nicht freigegeben (kein Scraping ohne Erlaubnis), ADS-B und D-ATIS sind nicht geprüft. Der Observation-Logger ist deshalb in dieser Phase ein Winddaten-Logger (METAR). Die Anfangszustände der Automaten werden aus dem ersten Wind bestimmt, nicht aus einer beobachteten Richtung. Sobald eine freigegebene Richtungsquelle da ist, sollte der Anfangszustand daraus kommen (Plan 4b, Punkt 5).
+- **Keine Richtungsbeobachtung.** Eine Quelle für die geflogene Richtung ist nicht angebunden (Umwelthaus dürfte abgefragt werden, siehe `docs/datenquellen.md`; ADS-B und D-ATIS sind nicht geprüft). Der Observation-Logger ist deshalb in dieser Phase ein Winddaten-Logger (METAR). Die Anfangszustände der Automaten werden aus dem ersten Wind bestimmt, nicht aus einer beobachteten Richtung. Sobald eine Richtungsquelle angebunden ist, sollte der Anfangszustand daraus kommen (Plan 4b, Punkt 5).
 - **Initialisierungszeit.** Die Ensemble-Antwort von Open-Meteo enthält den Initialisierungszeitpunkt des Modelllaufs nicht. Als `init_time` wird der Abrufzeitpunkt gespeichert, nicht der Modelllauf selbst.
 - **Keine Kalibrierung.** Die Ausgabe ist roh (`calibrated: false`), Stufe 1 und 2 (Plan 4d) fehlen.
 - **Kein Frische-Wächter, kein Slot-Job, kein Backfill, kein Evaluation-Job.** Das sind Phasen 5 und 6.

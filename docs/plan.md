@@ -531,7 +531,7 @@ frontend/
 
 - Alle Zustände (Zeitraum, Fenster, Modellumschalter, Baseline) in der URL, damit Links teilbar sind und die Browser-Zurück-Taste Zustand und Scrollposition wiederherstellt.
 - Navigation: Auf dem Handy untere Leiste mit vier Zielen (Verlauf, Statistik, Güte, Methodik), Icon und Text, aktiver Eintrag markiert. Auf dem Desktop dieselbe Navigation oben. Status und Rechtstexte im Fußbereich.
-- `index.html` enthält Titel, Beschreibung, Canonical, Open-Graph- und Twitter-Tags, Theme-Color, Manifest. Ein SPA hat keine seitenweisen Metadaten ohne Zutun, deshalb Titel und `meta description` pro Route per Router-Guard setzen. Solange die App privat ist: `noindex`.
+- `index.html` enthält Titel, Beschreibung, Canonical, Open-Graph- und Twitter-Tags, Theme-Color, Manifest. Ein SPA hat keine seitenweisen Metadaten ohne Zutun, deshalb Titel und `meta description` pro Route per Router-Guard setzen. Die App ist indexierbar (Stand 17.10.2026).
 - Favicons und `manifest.webmanifest` mit dem Favicon-Generator des Website-Workflows aus einem Logo erzeugen. Logo und Name sind noch offen.
 
 ### 10g. Datenzugriff im Frontend
@@ -837,14 +837,14 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 | 1 | Welche Quelle liefert verlässlich Beobachtungen und Historie (Ergebnis aus Abschnitt 3)? | Teilweise beantwortet (`docs/datenquellen.md`): Wind-Beobachtung über METAR EDDF (aviationweather.gov) als Primärquelle, Testabruf noch offen. Aktuelle Betriebsrichtung: Umwelthaus ohne Schnittstelle, nicht scrapen. Netzwerk-Check der Umwelthaus-Seite offen |
 | 2 | Gibt es in der API bereits ein Schema-Ablagekonzept und einen Migrationsmechanismus? | Beantwortet (`docs/api-konventionen.md`): Schemas als Dateien, Migrationen von Hand ohne Runner und ohne Migrationstabelle, Schreib-Token fehlt und wird neu eingeführt |
 | 3 | Auflösung der Historie: Zeitfenster, Stunden oder nur Tage? | Rohdaten als Wechselereignisse (zeitgenau), Anzeige und Statistik je Zeitfenster, Tageswerte abgeleitet |
-| 4 | Nur privat nutzbar oder später öffentlich? | Zunächst Staging hinter Zugriffsschutz (Basic Auth über Traefik-Middleware) und Produktion lesbar, aber `noindex` bis Rechtstexte stehen. Architektur ist von Anfang an öffentlich lesbar gedacht |
+| 4 | Nur privat nutzbar oder später öffentlich? | Öffentlich und indexierbar, Stand 17.10.2026 (Entscheidung Tobias). Impressum und Datenschutz stehen. Die Architektur ist öffentlich lesbar |
 | 5 | Domain und Name der App | `betriebsrichtung.tobeworks.de` (Staging), Produktionsdomain offen |
 | 6 | Farbzuordnung West/Ost wie vorgeschlagen? | Ja, mit dunkler Schrift, Buchstaben und Mustern |
 | 7 | Definition "Fenster ist Ost": Mehrheit der Zeit (über 50 Prozent)? | Ja, zusätzlich `expected_east_share` ausliefern |
 | 8 | Umgang mit dem Nachtfenster | Ausweisen, getrennt bewerten, bei fehlenden Daten `gap` |
 | 9 | Jobs als Kubernetes-CronJobs oder Cron auf dem vorhandenen Server? | Kubernetes-CronJobs |
-| 10 | Dürfen Daten von Umwelthaus/Fraport automatisiert abgerufen und gespeichert werden? | Umwelthaus: keine Nutzungsbedingungen und keine Schnittstelle auf der Seite, daher kein Scraping. Erlaubnis beim Betreiber erfragen (Entwurf in `docs/datenquellen.md`). Fraport noch nicht geprüft |
-| 11 | Open-Meteo: freie Nutzung zulässig oder Abo mit API-Key? | Die freie API ist nur nichtkommerziell (CC BY 4.0, 600 Aufrufe pro Minute, 10 000 pro Tag, kein Key). Ein öffentlicher Betrieb unter dem Tobeworks-Namen gilt wahrscheinlich als kommerziell, Entscheidung durch Tobias nötig. Bis dahin nur privater Betrieb oder Staging |
+| 10 | Dürfen Daten von Umwelthaus/Fraport automatisiert abgerufen und gespeichert werden? | Entscheidung Tobias, 17.10.2026: Was öffentlich abrufbar ist, darf abgefragt werden, eine Anfrage beim Betreiber ist nicht nötig. Umwelthaus ist bisher nicht angebunden (`docs/datenquellen.md`). Fraport noch nicht geprüft |
+| 11 | Open-Meteo: freie Nutzung zulässig oder Abo mit API-Key? | Geklärt, 17.10.2026: Die App ist nichtkommerziell, also gilt die freie API (CC BY 4.0, kein Key). Bedingung: keine Werbung, kein Abo, Quelle nennen. Ändert sich das, braucht es einen bezahlten Tarif |
 | 12 | Ansprache in Texten (neutral, du oder Sie) | Sachlich ohne direkte Anrede |
 | 13 | Zugriff auf die API von außen: Lesen offen oder mit Token? | Lesen offen, Schreiben nur mit Token, Rate-Limit |
 | 14 | Wo liegt das Roh-Archiv der Ensemble-Läufe (Persistent Volume oder Objektspeicher)? | Persistent Volume im Cluster, Sicherung einbeziehen |
@@ -884,7 +884,7 @@ Mit Empfehlung als Standard, falls keine Antwort kommt. Eine Antwort des Auftrag
 | D26 | Ingest-Endpunkte zusätzlich `forecast-configs` und `wind-observations` | Ohne Konfigurationsversion schlägt der Fremdschlüssel des Laufs fehl, Winddaten sind in Plan Abschnitt 9 vorgesehen, fehlen aber in Abschnitt 8 |
 | D27 | Idempotenz über Unique-Schlüssel je Tabelle, erster Wert gewinnt | observation und wind_observation (Zeit, Quelle), source_heartbeat (Quelle, Zeit), forecast_run (Datum, Lauf-Nummer), forecast (Lauf, Fensterbeginn, Modell), job_run (Korrelations-ID, aktualisiert Status), forecast_evaluation (Berechnung, Fenster, Zeitraum, Konfiguration, Klasse, Tag) |
 | D28 | `lead_day` ist 0 bei Klassenwerten statt NULL | MySQL erlaubt mehrere NULL in Unique-Schlüsseln, die Idempotenz griffe sonst bei Klassenwerten nicht |
-| D29 | Observation-Logger in Phase 4 ist ein METAR-Winddaten-Logger, keine Richtungsquelle | Umwelthaus ist ohne Erlaubnis nicht nutzbar, ADS-B und D-ATIS sind ungeprüft (`docs/datenquellen.md`) |
+| D29 | Observation-Logger in Phase 4 ist ein METAR-Winddaten-Logger, keine Richtungsquelle | Umwelthaus ist bisher nicht angebunden (Abruf wäre erlaubt, Entscheidung 17.10.2026), ADS-B und D-ATIS sind ungeprüft (`docs/datenquellen.md`) |
 | D30 | `init_time` ist der Abrufzeitpunkt, nicht der Modelllauf | Die Ensemble-Antwort von Open-Meteo liefert den Initialisierungszeitpunkt nicht |
 | D31 | Rohdaten-Archiv erst nach angelegtem Lauf, je Lauf eine Datei | Wiederholte Aufrufe würden sonst Rohdaten eines vorhandenen Laufs überschreiben |
 | D32 | Zeitachse liest `slot_actual` für vergangene Fenster und den neuesten `blend`-Lauf für zukünftige, Fenster ohne Wahrheit fehlen in der Antwort | Der Slot-Job (Phase 5) ist noch nicht gebaut, Beobachtungen für Richtungen fehlen ohnehin, Lücken werden nicht als West ausgegeben |

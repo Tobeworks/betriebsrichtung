@@ -11,7 +11,7 @@ Echte Beobachtung vor Ableitung aus Flugdaten vor Windschätzung. Jede Stufe wir
 | Zweck | Quelle | Stand | Entscheidung |
 |---|---|---|---|
 | Ensemble-Wind (Prognose) | Open-Meteo Ensemble API | Testabruf erfolgreich | Verwenden, Lizenz klären (siehe unten) |
-| Aktuelle Betriebsrichtung | Umwelthaus | Keine maschinenlesbare Schnittstelle gefunden | Nicht scrapen, Erlaubnis beim Betreiber erfragen |
+| Aktuelle Betriebsrichtung | Umwelthaus | Keine maschinenlesbare Schnittstelle gefunden | Öffentlich abrufbare Daten dürfen abgefragt werden (Entscheidung Tobias, 17.10.2026). Bisher nicht angebunden, nicht nötig |
 | Wind am Flughafen (Beobachtung) | METAR EDDF über aviationweather.gov | Doku geprüft, kein Testabruf | Primärquelle für Wind-Beobachtung |
 | Historischer Wind (Archiv) | IEM ASOS (METAR-Archiv) | Doku geprüft, EDDF-Abdeckung offen | Für Backfill prüfen |
 | Gegenprobe Wind | DWD Frankfurt Flughafen, CC BY 4.0 | Lizenz geprüft | Gegenprobe, Quellenvermerk nötig |
@@ -39,7 +39,7 @@ Echte Beobachtung vor Ableitung aus Flugdaten vor Windschätzung. Jede Stufe wir
   - Kommerziell sind Websites oder Apps mit Abos oder Werbung, Einbindung in kommerzielle Produkte oder Werbeaktionen.
   - Lizenz: CC BY 4.0 (Quellenvermerk). Kein API-Key im freien Tarif.
   - Limits: 600 Aufrufe pro Minute, 5 000 pro Stunde, 10 000 pro Tag, 300 000 pro Monat.
-- **Entscheidung nötig (offene Frage 11 im Plan):** Die App gehört zu Tobeworks, einem Unternehmen. Eine öffentliche Seite unter diesem Namen ist wahrscheinlich kommerziell im Sinne der Bedingungen. Bis zur Klärung nur privater Betrieb oder Staging ohne öffentliche Werbung und ohne Abo. Für öffentlichen Betrieb ist ein bezahlter Tarif wahrscheinlich nötig. Diese Entscheidung trifft Tobias.
+- **Entscheidung (Frage 11 im Plan, geklärt von Tobias am 17.10.2026):** Die App ist nichtkommerziell, also gilt die freie API. Bedingung: nichtkommerziell bleiben (keine Werbung, kein Abo, kein Verkauf) und die Quelle nennen (steht auf der Methodik-Seite). Ändert sich das, braucht es einen bezahlten Tarif.
 - **Abrufbudget:** Pro Forecast-Lauf je Modell eine Anfrage mit allen Mitgliedern und 14 Tagen, Modelle getrennt. Das bleibt weit unter 10 000 pro Tag.
 - **Offen:** Modellliste über die Doku hinaus bestätigt (`icon_seamless_eps` getestet), Einzelmodell-IDs für ICON global und GEM noch nicht getestet.
 
@@ -52,10 +52,9 @@ Echte Beobachtung vor Ableitung aus Flugdaten vor Windschätzung. Jede Stufe wir
   - Keine JSON-Daten, kein eingebettetes Datenobjekt, keine Endpunkt- oder Widget-URL, keine erkennbaren Skript-Quellen für die Diagramme.
   - Einziger Feed ist ein Seiten-RSS (`/rss/`), der laut Inhalt nicht die Prognose enthält.
   - Verweis auf einen Datendienst für automatische Steuerung über UNH, nur auf Anfrage.
-- **Nicht geprüft (Lücke):** Der Netzwerk-Tab der Seite (XHR-Aufrufe beim Laden und beim Verschieben des Schiebereglers). Dafür war die Chrome-Erweiterung nicht verbunden (`tabs_context_mcp` meldete keine Verbindung). Das ist die einzige Stelle, die eine versteckte JSON-Schnittstelle belegen oder ausschließen könnte.
+- **Gefunden (17.10.2026):** Die Prognose steckt als JSON im HTML der Seite (Attribut `data-graph`, 8-Stunden-Fenster mit `state` 1 = West, 2 = Wechsel möglich, 3 = Ost, 12/21/23/32 = Übergänge, und `probability` als Sicherheit dieser Einstufung, nicht als Ostwahrscheinlichkeit). Die Windangaben stammen laut Seite von openweathermap.org (Boden) und dem GFS-Modell. Eine eigene Schnittstelle gibt es nicht.
 - **Nutzungsbedingungen:** Keine Lizenz oder Nutzungserlaubnis auf der Seite. Quellen werden genannt: DFS für die Betriebsrichtung, GFS-Modell, openweathermap.org für Bodenwind. Trägerin ist die gemeinnützige Umwelthaus GmbH.
-- **Entscheidung:** Kein Scraping. Der Plan (Frage 10) sieht vor, bei fehlender Erlaubnis den Betreiber zu fragen. Die Anfrage ist eine Aufgabe für Tobias, nicht für den Agenten.
-- **Entwurf der Anfrage (zur Freigabe):** Ob automatisierte Abrufe der Richtungsanzeige und der Prognose für eine nichtkommerzielle Informations-App erlaubt sind, und ob es eine Datenschnittstelle gibt.
+- **Entscheidung (Tobias, 17.10.2026):** Was öffentlich abrufbar ist, darf abgefragt werden, eine Anfrage beim Betreiber ist nicht nötig. Die Seite ist bisher nicht angebunden. Die Prognose diente nur als Vergleichswert für die Bandgrenzen des Entscheidungsmodells (`docs/jobs.md`). Als Quelle für die tatsächlich geflogene Richtung wäre sie ein Kandidat, falls die Anbindung gewünscht ist.
 - **Auch offen:** DFS als Quelle der Betriebsrichtung. Ob die DFS eine maschinenlesbare Information veröffentlicht, ist nicht geprüft.
 
 ## 3. METAR EDDF (Wind am Flughafen)
@@ -96,9 +95,9 @@ Echte Beobachtung vor Ableitung aus Flugdaten vor Windschätzung. Jede Stufe wir
 
 ## Offene Punkte aus diesem Lauf
 
-1. Netzwerk-Tab der Umwelthaus-Seite prüfen (Chrome-Erweiterung nicht verbunden). Alternative ohne Browser: Entwicklertools in einem normalen Browser öffnen, Reiter Netzwerk, Filter "XHR" oder "Fetch", Seite neu laden, Schieberegler bewegen, und den Inhalt der Anfragen notieren.
-2. Lizenzfrage Open-Meteo für öffentlichen Betrieb (Tobias).
-3. Anfrage an Umwelthaus (Tobias, Entwurf oben).
+1. Erledigt: Netzwerk-Tab der Umwelthaus-Seite (die Daten stecken im HTML, siehe Abschnitt 2).
+2. Erledigt: Lizenzfrage Open-Meteo (nichtkommerziell, siehe Abschnitt 1).
+3. Entfällt: Anfrage an Umwelthaus.
 4. Testabruf METAR EDDF und Feldprüfung.
 5. Abdeckung EDDF in IEM ASOS.
 6. Open-Meteo Archiv (Reanalyse) für die Notlösung Statistik: Endpunkt und Lizenz prüfen.
