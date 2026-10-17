@@ -7,6 +7,7 @@ export const impressum: Abschnitt[] = [
       "Tobias Lorsbach, Tobeworks",
       "Neue Universitätsstraße 7, 55116 Mainz",
     ],
+    links: [{ text: "Homepage: tobeworks.de", url: "https://tobeworks.de" }],
   },
   {
     titel: "Kontakt",

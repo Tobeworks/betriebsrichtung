@@ -1,7 +1,13 @@
+export interface Link {
+  text: string;
+  url: string;
+}
+
 export interface Abschnitt {
   titel: string;
   absaetze: string[];
   liste?: string[];
+  links?: Link[];
 }
 
 export const methodik: Abschnitt[] = [

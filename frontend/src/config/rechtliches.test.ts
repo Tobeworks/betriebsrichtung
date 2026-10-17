@@ -10,6 +10,11 @@ describe("rechtliche Seiten", () => {
     expect(text).toContain("hallo@tobeworks.de");
   });
 
+  it("verlinken die Homepage", () => {
+    const links = impressum.flatMap((abschnitt) => abschnitt.links ?? []);
+    expect(links).toContainEqual({ text: "Homepage: tobeworks.de", url: "https://tobeworks.de" });
+  });
+
   it("beschreiben die Datenschutzerklärung ohne Dienste, die die App nicht nutzt", () => {
     const text = alleTexte.join(" ");
     expect(text).not.toMatch(/Matomo|Cal\.com|Google Analytics/);

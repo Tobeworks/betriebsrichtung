@@ -48,7 +48,10 @@ const version = __APP_VERSION__;
             {{ texte.status }}
           </RouterLink>
         </nav>
-        <p class="text-fine">{{ site.name }}, Version {{ version }}</p>
+        <p class="text-fine">
+          {{ site.name }}, Version {{ version }},
+          <a href="https://tobeworks.de" class="underline underline-offset-4">Tobeworks</a>
+        </p>
       </div>
     </footer>
   </div>
