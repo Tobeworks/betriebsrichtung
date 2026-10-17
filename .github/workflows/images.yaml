@@ -1,0 +1,69 @@
+name: Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - "jobs/**"
+      - ".github/workflows/images.yaml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Buildx einrichten
+        uses: docker/setup-buildx-action@v3
+
+      - name: Bei GHCR anmelden
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Frontend-Image bauen und veröffentlichen
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            VITE_API_BASE=${{ vars.VITE_API_BASE }}
+          tags: |
+            ghcr.io/tobeworks/betriebsrichtung:latest
+            ghcr.io/tobeworks/betriebsrichtung:${{ github.sha }}
+
+  jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Buildx einrichten
+        uses: docker/setup-buildx-action@v3
+
+      - name: Bei GHCR anmelden
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Jobs-Image bauen und veröffentlichen
+        uses: docker/build-push-action@v6
+        with:
+          context: jobs
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/tobeworks/betriebsrichtung-jobs:latest
+            ghcr.io/tobeworks/betriebsrichtung-jobs:${{ github.sha }}
