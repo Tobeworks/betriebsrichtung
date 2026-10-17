@@ -16,7 +16,7 @@ jobs:
       - name: API-Repository mit Schemas auschecken
         uses: actions/checkout@v4
         with:
-          repository: tobeworks/api
+          repository: Tobeworks/tw_api
           token: ${{ secrets.API_REPO_TOKEN }}
           path: api
 
