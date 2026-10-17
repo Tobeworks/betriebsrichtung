@@ -49,21 +49,9 @@ def gleitend(werte, fenster):
     return ausgabe
 
 
-def zustaende(glatt, east_on, west_back, min_verweil):
-    zustand = None
-    seit = 0
-    ausgabe = []
-    for stunde, wert in enumerate(glatt):
-        if zustand is None:
-            zustand = "east" if wert > east_on else "west"
-            seit = stunde
-        elif stunde - seit >= min_verweil:
-            if zustand == "west" and wert > east_on:
-                zustand, seit = "east", stunde
-            elif zustand == "east" and wert < west_back:
-                zustand, seit = "west", stunde
-        ausgabe.append(zustand)
-    return ausgabe
+def ost_anteil(rueckenwind, west_bis, ost_ab):
+    # ponytail: lineares Band statt harter Schwelle, die DFS entscheidet dazwischen nicht eindeutig
+    return min(1.0, max(0.0, (rueckenwind - west_bis) / (ost_ab - west_bis)))
 
 
 @dataclass
@@ -104,8 +92,7 @@ def auswerten(lauf, dec, ost_landebahn_grad):
               for v, d in zip(lauf.geschwindigkeiten[mitglied], lauf.richtungen[mitglied])]
         rueckenwind_listen.append(rw)
         glatt = gleitend(rw, dec["smoothing_hours"])
-        ost = zustaende(glatt, dec["east_on_tailwind_kn"], dec["west_back_tailwind_kn"], dec["min_dwell_hours"])
-        anteile[mitglied] = [1 if z == "east" else 0 for z in ost]
+        anteile[mitglied] = [ost_anteil(w, dec["west_back_tailwind_kn"], dec["east_on_tailwind_kn"]) for w in glatt]
 
     ergebnis = {}
     for (datum, slot), indizes in sorted(fenster.items(), key=lambda kv: kv[1][0]):
@@ -114,14 +101,13 @@ def auswerten(lauf, dec, ost_landebahn_grad):
         if len(indizes) / erwartet < MIN_ABDECKUNG:
             continue
         mitgliedsanteile = [sum(anteile[m][i] for i in indizes) / len(indizes) for m in range(mitglieder)]
-        ost_mitglieder = sum(1 for a in mitgliedsanteile if a > dec["slot_majority"])
         ergebnis[(datum, slot)] = Fensterwert(
             window_start=start,
             window_end=ende,
             local_date=datum,
             slot=slot,
             stunden=len(indizes),
-            p_model=ost_mitglieder / mitglieder,
+            p_model=sum(mitgliedsanteile) / mitglieder,
             erwarteter_anteil=sum(mitgliedsanteile) / mitglieder,
             mitglieder=mitglieder,
             rueckenwinde=[rueckenwind_listen[m][i] for m in range(mitglieder) for i in indizes],

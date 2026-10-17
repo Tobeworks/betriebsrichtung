@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "version": 1,
+  "version": 2,
   "airport": { "icao": "EDDF", "latitude": 50.04, "longitude": 8.56 },
   "axis": { "east_landing_deg": 70, "west_landing_deg": 250 },
   "decision": {
-    "east_on_tailwind_kn": 5,
-    "west_back_tailwind_kn": 2,
+    "east_on_tailwind_kn": 4,
+    "west_back_tailwind_kn": 0,
     "smoothing_hours": 3,
     "min_dwell_hours": 2,
     "slot_majority": 0.5

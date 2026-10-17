@@ -5,7 +5,7 @@ import pytest
 from betriebsrichtung_jobs import modell
 from betriebsrichtung_jobs.modell import Modelllauf
 
-DEC = {"east_on_tailwind_kn": 5, "west_back_tailwind_kn": 2, "smoothing_hours": 1, "min_dwell_hours": 0,
+DEC = {"east_on_tailwind_kn": 4, "west_back_tailwind_kn": 0, "smoothing_hours": 1, "min_dwell_hours": 0,
        "slot_majority": 0.5}
 
 
@@ -42,14 +42,17 @@ def test_rueckenwind_positiv_bei_ostwind_negativ_bei_westwind():
     assert modell.rueckenwind_west(10, 250, 70) == pytest.approx(-10)
 
 
-def test_hysterese_und_verweildauer_schalten_nur_bei_schwelle():
-    werte = [0, 0, 6, 6, 6, 6, 1, 1, 1, 1]
-    zustand = modell.zustaende(werte, 5, 2, 2)
-    assert zustand == ["west", "west", "east", "east", "east", "east", "west", "west", "west", "west"]
+def test_ostanteil_ist_im_band_linear_und_ausserhalb_begrenzt():
+    assert [modell.ost_anteil(w, 0, 4) for w in (-3, 0, 1, 2, 4, 9)] == [0, 0, 0.25, 0.5, 1, 1]
 
 
-def test_verweildauer_unterdrueckt_kurze_ausschlaege():
-    assert modell.zustaende([0, 6, 0, 6], 5, 2, 2) == ["west", "west", "west", "east"]
+def test_einig_aber_im_band_ergibt_keine_sicherheit():
+    # alle Mitglieder: Nordwind, 2 kn Rückenwind West -> Wechsel möglich, nicht 0 Prozent
+    start = utc(2026, 10, 17, 4)
+    zeiten = [start + timedelta(hours=h) for h in range(8)]
+    lauf = Modelllauf(model="m", zeiten=zeiten, geschwindigkeiten=[[5.8] * 8] * 3, richtungen=[[0.0] * 8] * 3)
+    fenster = modell.auswerten(lauf, DEC, 70)[(start.date(), "morning")]
+    assert fenster.p_model == pytest.approx(0.5, abs=0.05)
 
 
 def test_auswertung_ueberwiegend_ost_gibt_wahrscheinlichkeit_eins():

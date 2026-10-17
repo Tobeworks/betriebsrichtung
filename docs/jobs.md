@@ -38,6 +38,12 @@ Die Lauf-Nummer gehört zum Idempotenzschlüssel (lokaler Tag plus Nummer). Ein 
 
 Nach einem neu angelegten Lauf (`angelegt`) wird die Roh-Mitgliederreihe jedes Modells gespeichert: `DIR/JJJJ-MM-TT/lauf-NN.json.gz`. Wiederholte Aufrufe, die `vorhanden` melden, schreiben kein Archiv. Das Archiv ist die Voraussetzung, um das Entscheidungsmodell später mit anderen Parametern neu zu rechnen (Plan Abschnitt 9).
 
+## Entscheidungsmodell (Konfiguration Version 2)
+
+Der geglättete Rückenwind für West wird je Stunde und Ensemble-Mitglied linear auf einen Ostanteil abgebildet: bis `west_back_tailwind_kn` (0 kn) gilt West, ab `east_on_tailwind_kn` (4 kn) gilt Ost, dazwischen steigt der Anteil. Das Fenster bekommt den Mittelwert über Stunden und Mitglieder. Grund: Die DFS entscheidet im Bereich um 0 bis 4 kn nicht eindeutig (Boden- und Höhenwind, Pilotenmeldungen), das Ensemble kann diese Unsicherheit nicht abbilden. Eine harte Schwelle gab am 17.10.2026 bei Nordwind 0 % Ost, geflogen wurde Ost.
+
+Die Bandgrenzen sind vorläufig. Sie wurden gegen die 15 Fenster der Umwelthaus-Prognose vom 17.10.2026 abgeglichen (Zustände 1, 2, 3 dort: West, Wechsel möglich, Ost), nicht gegen beobachtete Richtungen. `min_dwell_hours` und `slot_majority` bleiben in der Konfiguration, weil das Schema sie verlangt, sie werden nicht mehr ausgewertet.
+
 ## Bekannte Grenzen (ehrlich)
 
 - **Keine Richtungsbeobachtung.** Umwelthaus ist nicht freigegeben (kein Scraping ohne Erlaubnis), ADS-B und D-ATIS sind nicht geprüft. Der Observation-Logger ist deshalb in dieser Phase ein Winddaten-Logger (METAR). Die Anfangszustände der Automaten werden aus dem ersten Wind bestimmt, nicht aus einer beobachteten Richtung. Sobald eine freigegebene Richtungsquelle da ist, sollte der Anfangszustand daraus kommen (Plan 4b, Punkt 5).

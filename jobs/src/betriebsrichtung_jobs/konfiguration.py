@@ -12,6 +12,9 @@ def laden(pfad=None):
     pfad = Path(os.environ.get("BETRIEBSRICHTUNG_CONFIG", pfad or STANDARD_PFAD))
     inhalt = json.loads(pfad.read_text(encoding="utf-8"))
     PrognoseKonfiguration.model_validate(inhalt)
+    dec = inhalt["decision"]
+    if dec["east_on_tailwind_kn"] <= dec["west_back_tailwind_kn"]:
+        raise ValueError("east_on_tailwind_kn muss größer als west_back_tailwind_kn sein")
     return inhalt
 
 
