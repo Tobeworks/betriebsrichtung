@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/external_forecast.schema.json",
+  "title": "Fremde Prognose",
+  "description": "Aussage einer externen Prognose, nur zur Qualitätsmessung und nie ausgeliefert. Nur anlegen, wenn der Betreiber die Speicherung erlaubt (Plan Frage 10). Bei statement direction ist direction gesetzt, bei probability ist probability gesetzt.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "external_forecast",
+    "primaryKey": ["id"],
+    "indexes": [{ "name": "idx_external_forecast_window", "columns": ["window_start"] }]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "source": {
+      "enum": ["umwelthaus"],
+      "x-db": { "type": "VARCHAR(32)" }
+    },
+    "fetched_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "window_start": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "window_end": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "statement": {
+      "enum": ["direction", "probability"],
+      "x-db": { "type": "VARCHAR(12)" }
+    },
+    "direction": {
+      "description": "Aussage als Betriebsrichtung, bei statement direction.",
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/betriebsrichtung" }, { "type": "null" }],
+      "x-db": { "type": "VARCHAR(4)" }
+    },
+    "probability": {
+      "description": "Aussage als Ostwahrscheinlichkeit, bei statement probability.",
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/wahrscheinlichkeit" }, { "type": "null" }],
+      "x-db": { "type": "DECIMAL(5,4)" }
+    }
+  },
+  "required": ["source", "fetched_at", "window_start", "window_end", "statement", "direction", "probability"],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "statement": { "const": "direction" } } },
+      "then": { "required": ["direction"], "properties": { "direction": { "$ref": "common.schema.json#/$defs/betriebsrichtung" } } }
+    },
+    {
+      "if": { "properties": { "statement": { "const": "probability" } } },
+      "then": { "required": ["probability"], "properties": { "probability": { "$ref": "common.schema.json#/$defs/wahrscheinlichkeit" } } }
+    }
+  ]
+}

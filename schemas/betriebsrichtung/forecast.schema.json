@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/forecast.schema.json",
+  "title": "Prognose je Zeitfenster",
+  "description": "Eine Prognose für ein Zeitfenster aus einem Lauf und einem Modell. Jede Berechnung ist eine neue Zeile, niemals überschrieben, sonst ist keine Auswertung nach Vorlaufzeit möglich. Regel: window_end ist größer als window_start, p_east_raw ist die unkalibrierte Wahrscheinlichkeit, p_east die ausgelieferte.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "forecast",
+    "primaryKey": ["id"],
+    "indexes": [{ "name": "idx_forecast_window_model", "columns": ["window_start", "model"] }],
+    "unique": [{ "name": "uq_forecast_run_window_model", "columns": ["run_id", "window_start", "model"] }],
+    "foreignKeys": [
+      { "name": "fk_forecast_run", "columns": ["run_id"], "references": "forecast_run(id)" }
+    ]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "description": "Verweis auf den Prognoselauf.",
+      "x-db": { "type": "BIGINT UNSIGNED" }
+    },
+    "window_start": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "window_end": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "local_date": {
+      "$ref": "common.schema.json#/$defs/lokales_datum",
+      "x-db": { "type": "DATE" }
+    },
+    "slot": {
+      "$ref": "common.schema.json#/$defs/zeitfenster",
+      "x-db": { "type": "VARCHAR(10)" }
+    },
+    "model": {
+      "$ref": "common.schema.json#/$defs/modell",
+      "x-db": { "type": "VARCHAR(40)" }
+    },
+    "p_east_raw": {
+      "$ref": "common.schema.json#/$defs/wahrscheinlichkeit",
+      "description": "Unkalibrierte Ostwahrscheinlichkeit aus den Ensemble-Mitgliedern.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "p_east": {
+      "$ref": "common.schema.json#/$defs/wahrscheinlichkeit",
+      "description": "Ausgelieferte Ostwahrscheinlichkeit, nach Kalibrierung und Begrenzung. Gleich p_east_raw, solange calibrated false ist.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "calibrated": {
+      "type": "boolean",
+      "description": "true, wenn Stufe 2 der Kalibrierung angewandt wurde.",
+      "x-db": { "type": "BOOLEAN" }
+    },
+    "expected_east_share": {
+      "$ref": "common.schema.json#/$defs/anteil",
+      "description": "Erwarteter Ostanteil des Fensters, für die Farbintensität im Frontend.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "members": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "description": "Anzahl der Ensemble-Läufe, die in p_east_raw eingeflossen sind.",
+      "x-db": { "type": "SMALLINT UNSIGNED" }
+    },
+    "lead_hours": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 400,
+      "description": "Vorlaufzeit in Stunden ab Berechnung bis Fensterbeginn.",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "config_hash": {
+      "$ref": "common.schema.json#/$defs/konfigurationshash",
+      "x-db": { "type": "CHAR(64)" }
+    }
+  },
+  "required": ["run_id", "window_start", "window_end", "local_date", "slot", "model", "p_east_raw", "p_east", "calibrated", "expected_east_share", "members", "lead_hours", "config_hash"],
+  "additionalProperties": false
+}

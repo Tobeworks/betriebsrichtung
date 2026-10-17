@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/forecast_run.schema.json",
+  "title": "Prognoselauf",
+  "description": "Ein Lauf des Forecast-Jobs. Idempotenz über Lauf-Slot (Datum und laufende Nummer). Ein wiederholter Lauf mit gleichem Slot dupliziert nichts. Alle Forecast- und WindAggregate-Zeilen eines Laufs werden in einer Transaktion geschrieben.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "forecast_run",
+    "primaryKey": ["id"],
+    "indexes": [{ "name": "idx_forecast_run_computed_at", "columns": ["computed_at"] }],
+    "unique": [{ "name": "uq_forecast_run_slot", "columns": ["run_date", "run_seq"] }],
+    "foreignKeys": [
+      { "name": "fk_forecast_run_config", "columns": ["config_hash"], "references": "forecast_config_version(config_hash)" }
+    ]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "run_date": {
+      "$ref": "common.schema.json#/$defs/lokales_datum",
+      "description": "Lokaler Kalendertag des Laufs, Teil des Idempotenzschlüssels.",
+      "x-db": { "type": "DATE" }
+    },
+    "run_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99,
+      "description": "Laufende Nummer am Tag, Teil des Idempotenzschlüssels.",
+      "x-db": { "type": "TINYINT UNSIGNED" }
+    },
+    "config_hash": {
+      "$ref": "common.schema.json#/$defs/konfigurationshash",
+      "x-db": { "type": "CHAR(64)" }
+    },
+    "computed_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "status": {
+      "$ref": "common.schema.json#/$defs/laufstatus",
+      "x-db": { "type": "VARCHAR(10)" }
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "x-db": { "type": "INT UNSIGNED" }
+    },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Je Modell der Initialisierungszeitpunkt des Modelllaufs und die Anzahl der Mitglieder.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "model": { "$ref": "common.schema.json#/$defs/modell" },
+          "init_time": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+          "members": { "type": "integer", "minimum": 1, "maximum": 200 }
+        },
+        "required": ["model", "init_time", "members"],
+        "additionalProperties": false
+      },
+      "x-db": { "type": "JSON" }
+    }
+  },
+  "required": ["run_date", "run_seq", "config_hash", "computed_at", "status", "duration_ms", "models"],
+  "additionalProperties": false
+}

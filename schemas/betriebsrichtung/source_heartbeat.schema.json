@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/source_heartbeat.schema.json",
+  "title": "Lebenszeichen einer Quelle",
+  "description": "Ein Abruf einer Quelle, unabhängig davon, ob sich die Richtung geändert hat. Unterscheidet Lücken durch Ausfall von einer unveränderten Richtung. Eigene Tabelle, damit observation schlank bleibt.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "source_heartbeat",
+    "primaryKey": [
+      "id"
+    ],
+    "indexes": [
+      {
+        "name": "idx_heartbeat_source_checked",
+        "columns": [
+          "source",
+          "checked_at"
+        ]
+      }
+    ],
+    "unique": [
+      {
+        "name": "uq_source_heartbeat",
+        "columns": [
+          "source",
+          "checked_at"
+        ]
+      }
+    ]
+  },
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "x-db": {
+        "type": "BIGINT UNSIGNED",
+        "autoIncrement": true
+      }
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/beobachtungsquelle",
+      "x-db": {
+        "type": "VARCHAR(32)"
+      }
+    },
+    "checked_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": {
+        "type": "DATETIME(3)"
+      }
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "error",
+        "empty"
+      ],
+      "description": "ok: Abruf gelungen, error: Quelle nicht erreichbar oder Format unbekannt, empty: Abruf gelungen, aber ohne Angabe.",
+      "x-db": {
+        "type": "VARCHAR(10)"
+      }
+    },
+    "detail": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200,
+      "x-db": {
+        "type": "VARCHAR(200)"
+      }
+    }
+  },
+  "required": [
+    "source",
+    "checked_at",
+    "status"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/observation.schema.json",
+  "title": "Beobachtung",
+  "description": "Eine Meldung einer Quelle zur Betriebsrichtung. Gespeichert wird nur bei Wechsel, Lebenszeichen liegen in source_heartbeat. Aus diesen Einträgen leitet der Slot-Job slot_actual ab. Eine Lücke in der Beobachtung ist nie Westbetrieb.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "observation",
+    "primaryKey": ["id"],
+    "indexes": [{ "name": "idx_observation_observed_at", "columns": ["observed_at"] }],
+    "unique": [{ "name": "uq_observation", "columns": ["observed_at", "source"] }]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "observed_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "description": "Zeitpunkt, ab dem die Quelle diese Richtung meldet.",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "runway_direction": {
+      "$ref": "common.schema.json#/$defs/betriebsrichtung",
+      "x-db": { "type": "VARCHAR(4)" }
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/beobachtungsquelle",
+      "x-db": { "type": "VARCHAR(32)" }
+    },
+    "recorded_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "description": "Zeitpunkt, zu dem der Eintrag gespeichert wurde.",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "detail": {
+      "type": ["string", "null"],
+      "maxLength": 200,
+      "description": "Freitext zur Herkunft, bei wind_estimate die Unterquelle.",
+      "x-db": { "type": "VARCHAR(200)" }
+    }
+  },
+  "required": ["observed_at", "runway_direction", "source", "recorded_at"],
+  "additionalProperties": false
+}

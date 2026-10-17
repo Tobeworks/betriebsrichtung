@@ -11,8 +11,8 @@ from referencing.jsonschema import DRAFT202012
 from betriebsrichtung_jobs import konfiguration, modell, quellen
 from betriebsrichtung_jobs.modell import Modelllauf
 
-SCHEMA_DIR = Path(os.environ.get("SCHEMA_DIR", Path(__file__).resolve().parents[2].parent / "api" / "schemas" / "betriebsrichtung"))
-pytestmark = pytest.mark.skipif(not SCHEMA_DIR.exists(), reason="API-Repo liegt nicht daneben")
+SCHEMA_DIR = Path(os.environ.get("SCHEMA_DIR", Path(__file__).resolve().parents[2] / "schemas" / "betriebsrichtung"))
+pytestmark = pytest.mark.skipif(not SCHEMA_DIR.exists(), reason="Schema-Kopie fehlt")
 
 
 def _schemas():

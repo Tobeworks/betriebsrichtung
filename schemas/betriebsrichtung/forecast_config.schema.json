@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/forecast_config.schema.json",
+  "title": "Prognose-Konfiguration",
+  "description": "Alle Parameter der Prognose, Datei jobs/config/forecast.json. Regeln, die ein Schema nicht ausdrückt: west_back_tailwind_kn liegt unter east_on_tailwind_kn. In models ist jede id nur einmal erlaubt. Der Hash der normalisierten Datei wird in jedem Prognoselauf gespeichert.",
+  "type": "object",
+  "x-schema-version": 1,
+  "required": ["schema", "version", "airport", "axis", "decision", "models", "calibration", "limits"],
+  "properties": {
+    "schema": { "const": 1, "description": "Version dieses Schemas." },
+    "version": { "type": "integer", "minimum": 1, "description": "Version der Konfiguration, bei jeder inhaltlichen Änderung erhöhen." },
+    "airport": {
+      "type": "object",
+      "required": ["icao", "latitude", "longitude"],
+      "additionalProperties": false,
+      "properties": {
+        "icao": { "type": "string", "pattern": "^[A-Z]{4}$", "description": "ICAO-Code des Flughafens, EDDF." },
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "axis": {
+      "type": "object",
+      "required": ["east_landing_deg", "west_landing_deg"],
+      "additionalProperties": false,
+      "properties": {
+        "east_landing_deg": { "type": "integer", "minimum": 0, "maximum": 359, "description": "Landerichtung Ost, Parallelbahnen 070." },
+        "west_landing_deg": { "type": "integer", "minimum": 0, "maximum": 359, "description": "Landerichtung West, Parallelbahnen 250." }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["east_on_tailwind_kn", "west_back_tailwind_kn", "smoothing_hours", "min_dwell_hours", "slot_majority"],
+      "additionalProperties": false,
+      "properties": {
+        "east_on_tailwind_kn": { "type": "number", "minimum": 0, "maximum": 50, "description": "Wechsel von West auf Ost, wenn die Rückenwindkomponente für West größer ist." },
+        "west_back_tailwind_kn": { "type": "number", "minimum": 0, "maximum": 50, "description": "Rückwechsel von Ost auf West, wenn die Rückenwindkomponente kleiner ist (Hysterese)." },
+        "smoothing_hours": { "type": "integer", "minimum": 1, "maximum": 24, "description": "Gleitendes Mittel der Rückenwindkomponente in Stunden." },
+        "min_dwell_hours": { "type": "integer", "minimum": 0, "maximum": 24, "description": "Mindestverweildauer in Stunden." },
+        "slot_majority": { "type": "number", "minimum": 0.5, "maximum": 1, "description": "Anteil, ab dem ein Fenster als Ost gilt. Startwert 0,5." }
+      }
+    },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Modelle für die gewichtete Mischung. Gewichte je Vorlaufklasse, 0 bedeutet nicht verwendet.",
+      "items": {
+        "type": "object",
+        "required": ["id", "weights"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/modell" },
+          "weights": {
+            "type": "object",
+            "required": ["d0_2", "d3_7", "d8_14"],
+            "additionalProperties": false,
+            "properties": {
+              "d0_2": { "type": "number", "minimum": 0, "maximum": 1 },
+              "d3_7": { "type": "number", "minimum": 0, "maximum": 1 },
+              "d8_14": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "required": ["method", "min_samples"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "enum": ["none", "platt", "isotonic"], "description": "Verfahren der Kalibrierung Stufe 2, none bis genug Vergleiche vorliegen." },
+        "min_samples": { "type": "integer", "minimum": 1, "description": "Mindestzahl an Vergleichen je Vorlaufklasse, Startwert 150." }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": ["probability_min", "probability_max"],
+      "additionalProperties": false,
+      "properties": {
+        "probability_min": { "type": "number", "minimum": 0, "maximum": 0.5 },
+        "probability_max": { "type": "number", "minimum": 0.5, "maximum": 1 }
+      }
+    }
+  },
+  "additionalProperties": false
+}

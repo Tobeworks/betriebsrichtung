@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/forecast_config_version.schema.json",
+  "title": "Konfigurationsversion",
+  "description": "Eine Version der Prognose-Konfiguration. Jede inhaltliche Änderung erzeugt eine neue Zeile mit neuem Hash. Alte Prognosen behalten ihre Version, damit Auswertungen nach Version möglich sind. Der Inhalt entspricht forecast_config.schema.json.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "forecast_config_version",
+    "primaryKey": ["id"],
+    "unique": [{ "name": "uq_forecast_config_hash", "columns": ["config_hash"] }]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "INT UNSIGNED", "autoIncrement": true } },
+    "config_hash": {
+      "$ref": "common.schema.json#/$defs/konfigurationshash",
+      "x-db": { "type": "CHAR(64)" }
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Laufende Versionsnummer aus dem Feld version der Konfigurationsdatei.",
+      "x-db": { "type": "INT UNSIGNED" }
+    },
+    "content": {
+      "type": "object",
+      "description": "Vollständiger Inhalt der Konfiguration zum Zeitpunkt der Erzeugung.",
+      "x-db": { "type": "JSON" }
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "change_note": {
+      "$ref": "common.schema.json#/$defs/kurztext",
+      "description": "Beschreibung der Änderung gegenüber der Vorversion.",
+      "x-db": { "type": "VARCHAR(200)" }
+    }
+  },
+  "required": ["config_hash", "version", "content", "created_at", "change_note"],
+  "additionalProperties": false
+}

@@ -117,7 +117,7 @@ frontend/
     api/
       client.ts            fetch wrapper: timeout, error normalization, base URL
       fixtures.ts          Sample timeline for offline development
-      generated/           TypeScript types generated from the API JSON schemas (do not edit)
+      generated/           TypeScript types generated from schemas/betriebsrichtung/ (do not edit)
     composables/
       useZeitachse.ts     Loads the timeline, handles loading, error and sample modes
     lib/
@@ -133,7 +133,7 @@ frontend/
   Dockerfile               Multi-stage container build
 ```
 
-Files in `src/api/generated/` are generated from the JSON schemas of the API repository. Do not edit them by hand.
+Files in `src/api/generated/` are generated from the JSON schemas in `../schemas/betriebsrichtung/`. Do not edit them by hand. Regenerate them from the repository root with `python scripts/generate_types.py`.
 
 ## Routing
 

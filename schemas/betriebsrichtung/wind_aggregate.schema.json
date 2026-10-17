@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/wind_aggregate.schema.json",
+  "title": "Windaggregat je Zeitfenster",
+  "description": "Zusammenfassung der Ensemble-Winde eines Fensters. Richtungen werden nie arithmetisch gemittelt, die mittlere Richtung entsteht aus den Vektorkomponenten (zirkuläre Statistik). Erlaubt Neuberechnung ohne erneute Abfrage der Wetter-API.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "wind_aggregate",
+    "primaryKey": ["id"],
+    "unique": [{ "name": "uq_wind_aggregate_run_window_model", "columns": ["run_id", "window_start", "model"] }],
+    "foreignKeys": [
+      { "name": "fk_wind_aggregate_run", "columns": ["run_id"], "references": "forecast_run(id)" }
+    ]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "x-db": { "type": "BIGINT UNSIGNED" }
+    },
+    "window_start": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "model": {
+      "$ref": "common.schema.json#/$defs/modell",
+      "x-db": { "type": "VARCHAR(40)" }
+    },
+    "east_member_share": {
+      "$ref": "common.schema.json#/$defs/anteil",
+      "description": "Anteil der Läufe mit Ostlage im Fenster.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "mean_direction_deg": {
+      "$ref": "common.schema.json#/$defs/richtung_grad",
+      "description": "Mittlere Windrichtung aus Vektorkomponenten.",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "mean_speed_kn": {
+      "$ref": "common.schema.json#/$defs/knoten",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "resultant_length": {
+      "$ref": "common.schema.json#/$defs/anteil",
+      "description": "Mittlere Resultierende der Richtungen, 1 bedeutet einheitliche Richtung, nahe 0 bedeutet stark wechselnd.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "speed_sd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Standardabweichung der Geschwindigkeit in Knoten.",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "tailwind_p10": {
+      "$ref": "common.schema.json#/$defs/statistik",
+      "description": "10. Perzentil der Rückenwindkomponente für West in Knoten.",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "tailwind_p50": {
+      "$ref": "common.schema.json#/$defs/statistik",
+      "description": "Median der Rückenwindkomponente für West in Knoten.",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "tailwind_p90": {
+      "$ref": "common.schema.json#/$defs/statistik",
+      "description": "90. Perzentil der Rückenwindkomponente für West in Knoten.",
+      "x-db": { "type": "DOUBLE" }
+    }
+  },
+  "required": ["run_id", "window_start", "model", "east_member_share", "mean_direction_deg", "mean_speed_kn", "resultant_length", "speed_sd", "tailwind_p10", "tailwind_p50", "tailwind_p90"],
+  "additionalProperties": false
+}

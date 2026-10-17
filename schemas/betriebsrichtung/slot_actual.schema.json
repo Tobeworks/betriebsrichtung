@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/slot_actual.schema.json",
+  "title": "Tatsächliche Betriebsrichtung je Zeitfenster",
+  "description": "Die Wahrheit eines Zeitfensters, aus den Beobachtungen abgeleitet. Ein Fenster ist Ost, wenn east_share größer als 0,5 ist. Ist observed_share unter 0,7, lautet truth gap. Frontend und Auswertung nutzen dieselbe Wahrheit. Neuberechnung bei nachgetragenen Daten ist erlaubt, daher computed_at.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "slot_actual",
+    "primaryKey": ["id"],
+    "unique": [{ "name": "uq_slot_actual", "columns": ["local_date", "slot"] }],
+    "indexes": [{ "name": "idx_slot_actual_window", "columns": ["window_start"] }]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "local_date": {
+      "$ref": "common.schema.json#/$defs/lokales_datum",
+      "x-db": { "type": "DATE" }
+    },
+    "slot": {
+      "$ref": "common.schema.json#/$defs/zeitfenster",
+      "x-db": { "type": "VARCHAR(10)" }
+    },
+    "window_start": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "window_end": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "east_share": {
+      "$ref": "common.schema.json#/$defs/anteil",
+      "description": "Zeitanteil mit Ostbetrieb innerhalb des beobachteten Teils.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "observed_share": {
+      "$ref": "common.schema.json#/$defs/anteil",
+      "description": "Zeitanteil des Fensters, der durch Beobachtungen abgedeckt ist.",
+      "x-db": { "type": "DECIMAL(5,4)" }
+    },
+    "truth": {
+      "$ref": "common.schema.json#/$defs/wahrheit",
+      "x-db": { "type": "VARCHAR(4)" }
+    },
+    "source": {
+      "description": "Maßgebliche Quelle, null wenn truth gap ist.",
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/beobachtungsquelle" }, { "type": "null" }],
+      "x-db": { "type": "VARCHAR(32)" }
+    },
+    "quality": {
+      "$ref": "common.schema.json#/$defs/qualitaet",
+      "x-db": { "type": "VARCHAR(10)" }
+    },
+    "computed_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    }
+  },
+  "required": ["local_date", "slot", "window_start", "window_end", "east_share", "observed_share", "truth", "source", "quality", "computed_at"],
+  "additionalProperties": false
+}

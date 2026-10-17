@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/wind_observation.schema.json",
+  "title": "Winddatenreihe",
+  "description": "Gemessener oder gespeicherter Wind an einer Station. Grundlage für die Kalibrierung Stufe 1. Die Richtung der Betriebsrichtung wird daraus nicht übernommen, sie entsteht erst in der Ableitung (Plan 4b).",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "wind_observation",
+    "primaryKey": ["id"],
+    "unique": [{ "name": "uq_wind_observation", "columns": ["observed_at", "source"] }]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "observed_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "speed_kn": {
+      "$ref": "common.schema.json#/$defs/knoten",
+      "description": "Windgeschwindigkeit in Knoten.",
+      "x-db": { "type": "DOUBLE" }
+    },
+    "direction_deg": {
+      "description": "Windrichtung in Grad, null bei wechselndem Wind (VRB) oder Windstille.",
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/richtung_grad" }, { "type": "null" }],
+      "x-db": { "type": "DOUBLE" }
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/windquelle",
+      "x-db": { "type": "VARCHAR(32)" }
+    },
+    "recorded_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    }
+  },
+  "required": ["observed_at", "speed_kn", "direction_deg", "source", "recorded_at"],
+  "additionalProperties": false
+}

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/job_run.schema.json",
+  "title": "Jobprotokoll",
+  "description": "Ein Lauf eines Jobs. Grundlage der Statusseite und des Frische-Wächters. Regel: finished_at ist nicht vor started_at, bei status running fehlt finished_at.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "job_run",
+    "primaryKey": [
+      "id"
+    ],
+    "indexes": [
+      {
+        "name": "idx_job_run_name_started",
+        "columns": [
+          "job_name",
+          "started_at"
+        ]
+      }
+    ],
+    "unique": [
+      {
+        "name": "uq_job_run_correlation",
+        "columns": [
+          "correlation_id"
+        ]
+      }
+    ]
+  },
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "x-db": {
+        "type": "BIGINT UNSIGNED",
+        "autoIncrement": true
+      }
+    },
+    "job_name": {
+      "type": "string",
+      "pattern": "^[a-z_]{3,40}$",
+      "maxLength": 40,
+      "description": "Name des Jobs, zum Beispiel observation_logger oder forecast.",
+      "x-db": {
+        "type": "VARCHAR(40)"
+      }
+    },
+    "started_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": {
+        "type": "DATETIME(3)"
+      }
+    },
+    "finished_at": {
+      "description": "Ende des Laufs, null solange der Lauf läuft.",
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/zeitpunkt"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-db": {
+        "type": "DATETIME(3)"
+      }
+    },
+    "status": {
+      "$ref": "common.schema.json#/$defs/jobstatus",
+      "x-db": {
+        "type": "VARCHAR(10)"
+      }
+    },
+    "rows_read": {
+      "type": "integer",
+      "minimum": 0,
+      "x-db": {
+        "type": "INT UNSIGNED"
+      }
+    },
+    "rows_written": {
+      "type": "integer",
+      "minimum": 0,
+      "x-db": {
+        "type": "INT UNSIGNED"
+      }
+    },
+    "error_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2000,
+      "x-db": {
+        "type": "TEXT"
+      }
+    },
+    "job_version": {
+      "$ref": "common.schema.json#/$defs/kurztext",
+      "x-db": {
+        "type": "VARCHAR(200)"
+      }
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 64,
+      "description": "Korrelations-ID des Laufs, erscheint in allen Logzeilen dieses Laufs.",
+      "x-db": {
+        "type": "VARCHAR(64)"
+      }
+    }
+  },
+  "required": [
+    "job_name",
+    "started_at",
+    "finished_at",
+    "status",
+    "rows_read",
+    "rows_written",
+    "error_text",
+    "job_version",
+    "correlation_id"
+  ],
+  "additionalProperties": false
+}

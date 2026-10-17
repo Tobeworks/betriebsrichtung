@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/timeline.response.schema.json",
+  "title": "Antwort Zeitachse",
+  "description": "Vorberechnete Zeitachse für GET /betriebsrichtung/v1/timeline. Je Tag und Fenster entweder die Wahrheit (observed, estimated, gap) oder die neueste Prognose (forecast). Regeln: bei gap ist runway_direction null. Ein Eintrag mit status forecast trägt p_east, nie runway_direction.",
+  "type": "object",
+  "x-schema-version": 1,
+  "required": ["schema", "generated_at", "data_through", "timezone", "skill_horizon_days", "skill_horizon_provisional", "items"],
+  "properties": {
+    "schema": { "const": 1 },
+    "generated_at": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+    "data_through": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+    "timezone": { "const": "Europe/Berlin" },
+    "skill_horizon_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 14,
+      "description": "Erster Vorlauftag, an dem die Prognose gegenüber der Klimatologie nicht mehr belastbar besser ist. Trenner im Frontend."
+    },
+    "skill_horizon_provisional": {
+      "type": "boolean",
+      "description": "true, solange zu wenige Daten vorliegen und der Standardwert 7 gilt."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/eintrag_wahrheit" },
+          { "$ref": "#/$defs/eintrag_prognose" }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "eintrag_wahrheit": {
+      "type": "object",
+      "required": ["status", "local_date", "slot", "start", "end", "runway_direction", "east_share", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["observed", "estimated", "gap"] },
+        "local_date": { "$ref": "common.schema.json#/$defs/lokales_datum" },
+        "slot": { "$ref": "common.schema.json#/$defs/zeitfenster" },
+        "start": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "end": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "runway_direction": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/betriebsrichtung" }, { "type": "null" }]
+        },
+        "east_share": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
+        "source": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/beobachtungsquelle" }, { "type": "null" }]
+        }
+      }
+    },
+    "eintrag_prognose": {
+      "type": "object",
+      "required": ["status", "local_date", "slot", "start", "end", "p_east", "p_east_raw", "lead_hours", "computed_at", "members", "calibrated"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "const": "forecast" },
+        "local_date": { "$ref": "common.schema.json#/$defs/lokales_datum" },
+        "slot": { "$ref": "common.schema.json#/$defs/zeitfenster" },
+        "start": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "end": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "p_east": { "$ref": "common.schema.json#/$defs/wahrscheinlichkeit" },
+        "p_east_raw": { "$ref": "common.schema.json#/$defs/wahrscheinlichkeit" },
+        "lead_hours": { "type": "number", "minimum": 0, "maximum": 400 },
+        "computed_at": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "members": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "calibrated": { "type": "boolean" }
+      }
+    }
+  }
+}

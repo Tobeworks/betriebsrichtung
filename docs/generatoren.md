@@ -6,7 +6,7 @@ Stand: 2026-10-16. Die Schemas liegen in der API-Repo unter `schemas/betriebsric
 
 | Ziel | Werkzeug | Ort | Wo ausgeführt |
 |---|---|---|---|
-| DDL-Migration | `api/scripts/betriebsrichtung_ddl.py` | `api/migrations/2026-10-16_01_create_betriebsrichtung.sql` | API-Repo |
+| DDL-Migration | `scripts/betriebsrichtung_ddl.py` | `db/2026-10-16_01_create_betriebsrichtung.sql` | Dieses Repo |
 | TypeScript-Typen | `json-schema-to-typescript@16.0.0` | `frontend/src/api/generated/` | Dieses Repo |
 | Pydantic-Modelle (v2) | `datamodel-code-generator==0.26.3` | `jobs/src/betriebsrichtung_jobs/generated/` | Dieses Repo |
 
@@ -21,9 +21,9 @@ pip install datamodel-code-generator==0.26.3
 python scripts/generate_types.py
 ```
 
-Liegt die Quelle woanders, `SCHEMA_DIR` setzen. Fehlt die Quelle ganz, wird der Abgleich übersprungen.
+Die Quelle ist die Kopie `schemas/betriebsrichtung/` in diesem Repo. Die Kopie ist identisch mit `api/schemas/betriebsrichtung/` im privaten API-Repo, das prüft die CI. Liegt die Kopie woanders, `SCHEMA_DIR` setzen.
 
-DDL, im API-Repo:
+DDL, in diesem Repo:
 
 ```
 python scripts/betriebsrichtung_ddl.py

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/error.schema.json",
+  "title": "Fehlerantwort",
+  "description": "Einheitliche Fehlerantwort aller Betriebsrichtungs-Endpunkte. Die Meldung ist deutsch und für Menschen gedacht, code ist maschinenlesbar. Ein Stacktrace wird nie ausgeliefert. Eine Lücke im Datensatz ist kein Fehler, sondern der Status gap.",
+  "type": "object",
+  "x-schema-version": 1,
+  "required": ["status", "error", "code"],
+  "properties": {
+    "status": { "const": 0, "description": "Immer 0 bei Fehlern, wie im Bestand der API." },
+    "error": { "type": "string", "minLength": 1, "maxLength": 300, "description": "Deutsche Meldung." },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z_]{3,60}$",
+      "description": "Maschinenlesbarer Code, zum Beispiel ZEITRAUM_ZU_GROSS."
+    }
+  },
+  "additionalProperties": false
+}

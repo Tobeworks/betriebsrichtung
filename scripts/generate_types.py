@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_DIR = Path(os.environ.get("SCHEMA_DIR", ROOT.parent / "api" / "schemas" / "betriebsrichtung"))
+SCHEMA_DIR = Path(os.environ.get("SCHEMA_DIR", ROOT / "schemas" / "betriebsrichtung"))
 TS_OUT = ROOT / "frontend" / "src" / "api" / "generated"
 PY_OUT = ROOT / "jobs" / "src" / "betriebsrichtung_jobs" / "generated"
 TS_CLI = "json-schema-to-typescript@16.0.0"

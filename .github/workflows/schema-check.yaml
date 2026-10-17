@@ -35,7 +35,7 @@ jobs:
 
       - name: Typen und Modelle neu erzeugen
         env:
-          SCHEMA_DIR: api/schemas/betriebsrichtung
+          SCHEMA_DIR: schemas/betriebsrichtung
         run: python scripts/generate_types.py
 
       - name: Abweichung der erzeugten Typen prüfen
@@ -46,5 +46,8 @@ jobs:
             exit 1
           fi
 
+      - name: Schema-Kopie gegen das API-Repo prüfen
+        run: diff -r api/schemas/betriebsrichtung schemas/betriebsrichtung
+
       - name: Migration gegen das Schema prüfen
-        run: python api/scripts/betriebsrichtung_ddl.py --pruefen
+        run: python scripts/betriebsrichtung_ddl.py --pruefen

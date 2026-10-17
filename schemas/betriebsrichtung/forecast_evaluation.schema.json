@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/forecast_evaluation.schema.json",
+  "title": "Auswertung der Prognosegüte",
+  "description": "Gütemaße einer Vorlaufklasse, eines Zeitfensters und eines Zeitraums, jeweils gegen die Baselines West, Klimatologie und Persistenz. Skill-Werte sind positiv, wenn die Prognose besser ist als die Baseline. Mit weniger als 30 Vergleichen wird keine Kennzahl angezeigt, provisional ist true, solange die Datenmenge gering ist.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "forecast_evaluation",
+    "primaryKey": [
+      "id"
+    ],
+    "indexes": [
+      {
+        "name": "idx_forecast_evaluation_scope",
+        "columns": [
+          "window_kind",
+          "period",
+          "config_hash"
+        ]
+      }
+    ],
+    "unique": [
+      {
+        "name": "uq_forecast_evaluation",
+        "columns": [
+          "computed_at",
+          "window_kind",
+          "period",
+          "config_hash",
+          "lead_class",
+          "lead_day"
+        ]
+      }
+    ]
+  },
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "x-db": {
+        "type": "BIGINT UNSIGNED",
+        "autoIncrement": true
+      }
+    },
+    "lead_class": {
+      "enum": [
+        "1_tag",
+        "2_3_tage",
+        "4_7_tage",
+        "8_14_tage"
+      ],
+      "description": "Vorlaufklasse. Die Grenzen der Klassen sind Obergrenzen, die Beschriftung nennt den Vorlauf ab Fensterbeginn.",
+      "x-db": {
+        "type": "VARCHAR(16)"
+      }
+    },
+    "lead_day": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 14,
+      "description": "Vorlauftag 1 bis 14 für die Unsicherheitsgrenze, 0 bei Klassenwerten. Kein NULL, damit die Eindeutigkeit greift.",
+      "x-db": {
+        "type": "TINYINT UNSIGNED"
+      }
+    },
+    "window_kind": {
+      "$ref": "common.schema.json#/$defs/fensterart",
+      "x-db": {
+        "type": "VARCHAR(10)"
+      }
+    },
+    "period": {
+      "enum": [
+        "rolling_90d",
+        "all"
+      ],
+      "x-db": {
+        "type": "VARCHAR(16)"
+      }
+    },
+    "config_hash": {
+      "$ref": "common.schema.json#/$defs/konfigurationshash",
+      "x-db": {
+        "type": "CHAR(64)"
+      }
+    },
+    "comparisons": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Anzahl der Vergleiche in diesem Ausschnitt.",
+      "x-db": {
+        "type": "INT UNSIGNED"
+      }
+    },
+    "hit_rate": {
+      "description": "Trefferquote bei Schwelle 0,5, null bei zu wenigen Vergleichen.",
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/anteil"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-db": {
+        "type": "DECIMAL(5,4)"
+      }
+    },
+    "brier": {
+      "description": "Brier-Score, null bei zu wenigen Vergleichen.",
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/anteil"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-db": {
+        "type": "DECIMAL(5,4)"
+      }
+    },
+    "skill_west": {
+      "description": "Brier Skill Score gegen immer West, null bei zu wenigen Vergleichen.",
+      "type": [
+        "number",
+        "null"
+      ],
+      "maximum": 1,
+      "x-db": {
+        "type": "DOUBLE"
+      }
+    },
+    "skill_climatology": {
+      "description": "Brier Skill Score gegen die Klimatologie, null bei zu wenigen Vergleichen.",
+      "type": [
+        "number",
+        "null"
+      ],
+      "maximum": 1,
+      "x-db": {
+        "type": "DOUBLE"
+      }
+    },
+    "skill_persistence": {
+      "description": "Brier Skill Score gegen die Persistenz, null bei zu wenigen Vergleichen.",
+      "type": [
+        "number",
+        "null"
+      ],
+      "maximum": 1,
+      "x-db": {
+        "type": "DOUBLE"
+      }
+    },
+    "ci_low": {
+      "description": "Untere Grenze des Bootstrap-Konfidenzintervalls für den Brier-Score (Blöcke über ganze Tage), null wenn nicht berechnet.",
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/anteil"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-db": {
+        "type": "DECIMAL(5,4)"
+      }
+    },
+    "ci_high": {
+      "description": "Obere Grenze des Bootstrap-Konfidenzintervalls für den Brier-Score, null wenn nicht berechnet.",
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/anteil"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-db": {
+        "type": "DECIMAL(5,4)"
+      }
+    },
+    "reliability": {
+      "type": "array",
+      "description": "Reliability-Klassen zu 10 Prozent Breite. Vorhergesagte Mitte gegen beobachtete Häufigkeit.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bin_low": {
+            "$ref": "common.schema.json#/$defs/anteil"
+          },
+          "bin_high": {
+            "$ref": "common.schema.json#/$defs/anteil"
+          },
+          "predicted_mean": {
+            "$ref": "common.schema.json#/$defs/anteil"
+          },
+          "observed_share": {
+            "$ref": "common.schema.json#/$defs/anteil"
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "bin_low",
+          "bin_high",
+          "predicted_mean",
+          "observed_share",
+          "n"
+        ],
+        "additionalProperties": false
+      },
+      "x-db": {
+        "type": "JSON"
+      }
+    },
+    "provisional": {
+      "type": "boolean",
+      "description": "true bei geringer Datenmenge, dann wird das Ergebnis als vorläufig gekennzeichnet.",
+      "x-db": {
+        "type": "BOOLEAN"
+      }
+    },
+    "computed_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": {
+        "type": "DATETIME(3)"
+      }
+    }
+  },
+  "required": [
+    "lead_class",
+    "lead_day",
+    "window_kind",
+    "period",
+    "config_hash",
+    "comparisons",
+    "hit_rate",
+    "brier",
+    "skill_west",
+    "skill_climatology",
+    "skill_persistence",
+    "ci_low",
+    "ci_high",
+    "reliability",
+    "provisional",
+    "computed_at"
+  ],
+  "additionalProperties": false
+}
