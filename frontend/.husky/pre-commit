@@ -1,0 +1,3 @@
+# Patch-Version bei jedem Commit erhöhen (wie in tobeworks_8) und in den Jobs nachziehen
+npm --prefix frontend run version:patch --silent
+git add frontend/package.json jobs/src/betriebsrichtung_jobs/__main__.py

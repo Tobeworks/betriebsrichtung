@@ -1,9 +1,13 @@
-"""Setzt JOB_VERSION in den Jobs auf die Version aus frontend/package.json (wird von release-it aufgerufen)."""
+"""Setzt JOB_VERSION in den Jobs auf die Version aus frontend/package.json (einzige Quelle der Version)."""
+import json
 import re
-import sys
 from pathlib import Path
 
-DATEI = Path(__file__).resolve().parents[1] / "jobs" / "src" / "betriebsrichtung_jobs" / "__main__.py"
+WURZEL = Path(__file__).resolve().parents[1]
+DATEI = WURZEL / "jobs" / "src" / "betriebsrichtung_jobs" / "__main__.py"
 
-neu = re.sub(r'JOB_VERSION = "[^"]*"', f'JOB_VERSION = "{sys.argv[1]}"', DATEI.read_text(encoding="utf-8"), count=1)
-DATEI.write_text(neu, encoding="utf-8")
+version = json.loads((WURZEL / "frontend" / "package.json").read_text(encoding="utf-8"))["version"]
+DATEI.write_text(
+    re.sub(r'JOB_VERSION = "[^"]*"', f'JOB_VERSION = "{version}"', DATEI.read_text(encoding="utf-8"), count=1),
+    encoding="utf-8",
+)
