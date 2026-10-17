@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import PlatzhalterSeite from "../components/layout/PlatzhalterSeite.vue";
+import RechtsSeite from "../components/layout/RechtsSeite.vue";
+import { impressum } from "../config/rechtliches";
 import { texte } from "../config/texte";
 </script>
 
 <template>
-  <PlatzhalterSeite :titel="texte.impressum" :text="texte.rechtsPlatzhalter" />
+  <RechtsSeite :titel="texte.impressum" :abschnitte="impressum" />
 </template>

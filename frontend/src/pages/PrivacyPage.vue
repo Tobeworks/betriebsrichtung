@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import PlatzhalterSeite from "../components/layout/PlatzhalterSeite.vue";
+import RechtsSeite from "../components/layout/RechtsSeite.vue";
+import { datenschutz } from "../config/rechtliches";
 import { texte } from "../config/texte";
 </script>
 
 <template>
-  <PlatzhalterSeite :titel="texte.datenschutz" :text="texte.datenschutzText" />
+  <RechtsSeite :titel="texte.datenschutz" :abschnitte="datenschutz" />
 </template>
