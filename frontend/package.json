@@ -1,11 +1,13 @@
 {
   "name": "betriebsrichtung-frontend",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "packageManager": "pnpm@11.28.3",
   "scripts": {
     "dev": "vite",
+    "dev:metar": "sh ../scripts/dev-jobs.sh metar",
+    "dev:forecast": "sh ../scripts/dev-jobs.sh forecast",
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",

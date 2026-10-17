@@ -12,6 +12,7 @@ export interface Beschreibung {
   haupt: string;
   neben: string;
   ostAnteil?: number;
+  prognose?: boolean;
 }
 
 export function slotName(slot: string): string {
@@ -31,8 +32,20 @@ export function beschreibeEintrag(eintrag: Eintrag): Beschreibung {
       zustand: einordnung.richtung,
       text: `${einordnung.klasse}, Ostbetrieb ${prozentText(eintrag.p_east)}`,
       haupt: prozentText(eintrag.p_east),
-      neben: einordnung.klasse,
+      neben: `${texte.prognose}: ${einordnung.klasse}`,
       ostAnteil: eintrag.p_east,
+      prognose: true,
+    };
+  }
+  if (eintrag.status === "estimated" && eintrag.east_share !== null) {
+    // Aus Messwind geschätzt: als Anteil zeigen, nicht als Ost oder West. Die DFS entscheidet im Zwischenband nicht allein nach Wind.
+    const einordnung = einordnen(eintrag.east_share);
+    return {
+      zustand: einordnung.richtung,
+      text: `${texte.geschaetzt}, Ostbetrieb ${prozentText(eintrag.east_share)}`,
+      haupt: prozentText(eintrag.east_share),
+      neben: `${texte.geschaetzt}: ${einordnung.klasse}`,
+      ostAnteil: eintrag.east_share,
     };
   }
   if (eintrag.status === "gap" || eintrag.runway_direction === null) {

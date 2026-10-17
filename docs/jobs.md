@@ -9,10 +9,22 @@ python -m betriebsrichtung_jobs metar [--trockenlauf]
 python -m betriebsrichtung_jobs forecast --lauf-nummer 1-99 [--archiv DIR] [--trockenlauf]
 ```
 
-- `metar`: holt die METAR-Meldungen von EDDF der letzten 24 Stunden und speichert sie als Winddaten (`wind-observations`).
+- `metar`: holt die METAR-Meldungen von EDDF der letzten 24 Stunden (`--stunden 1-168` für einen Nachtrag), speichert sie als Winddaten (`wind-observations`) und schätzt daraus die Wahrheit der begonnenen Fenster (`slot-actuals`, siehe unten).
 - `forecast`: holt für jedes Modell in `jobs/config/forecast.json` das 14-Tage-Ensemble, rechnet Ostwahrscheinlichkeiten je Zeitfenster und schreibt den Lauf atomar (`forecast-configs`, `forecast-runs`).
 - `--trockenlauf`: rechnet und gibt aus, schreibt nichts und archiviert nichts.
 - Ein Lauf protokolliert sich am Ende mit einem Eintrag in `job-runs`.
+
+## CronJob auf dem Cluster auslösen
+
+Die Manifeste liegen im Netcup-Repo (`apps/betriebsrichtung-jobs/cronjobs.yaml`). Zeiten in UTC: `metar` stündlich zur Minute 17, `forecast-1` 04:30, `forecast-2` 10:30, `forecast-3` 16:30. Die CronJobs nutzen `ghcr.io/tobeworks/betriebsrichtung-jobs:latest` mit `imagePullPolicy: Always`, jeder Lauf zieht also das aktuelle Image.
+
+```bash
+kubectl create job --from=cronjob/betriebsrichtung-forecast-3 forecast-manuell -n betriebsrichtung
+kubectl logs -n betriebsrichtung job/forecast-manuell -f
+kubectl delete job forecast-manuell -n betriebsrichtung
+```
+
+Eine Lauf-Nummer wird pro Tag nur einmal angenommen. Hat der geplante Lauf heute schon geschrieben, meldet der manuelle Lauf `vorhanden` und ändert nichts. Das lokale Starten steht im [README](../README.md#run-the-jobs-locally).
 
 ## Umgebung
 
@@ -43,6 +55,16 @@ Nach einem neu angelegten Lauf (`angelegt`) wird die Roh-Mitgliederreihe jedes M
 Der geglättete Rückenwind für West wird je Stunde und Ensemble-Mitglied linear auf einen Ostanteil abgebildet: bis `west_back_tailwind_kn` (0 kn) gilt West, ab `east_on_tailwind_kn` (4 kn) gilt Ost, dazwischen steigt der Anteil. Das Fenster bekommt den Mittelwert über Stunden und Mitglieder. Grund: Die DFS entscheidet im Bereich um 0 bis 4 kn nicht eindeutig (Boden- und Höhenwind, Pilotenmeldungen), das Ensemble kann diese Unsicherheit nicht abbilden. Eine harte Schwelle gab am 17.10.2026 bei Nordwind 0 % Ost, geflogen wurde Ost.
 
 Die Bandgrenzen sind vorläufig. Sie wurden gegen die 15 Fenster der Umwelthaus-Prognose vom 17.10.2026 abgeglichen (Zustände 1, 2, 3 dort: West, Wechsel möglich, Ost), nicht gegen beobachtete Richtungen. `min_dwell_hours` und `slot_majority` bleiben in der Konfiguration, weil das Schema sie verlangt, sie werden nicht mehr ausgewertet.
+
+## Geschätzte Wahrheit aus Messwind
+
+Solange keine Quelle für die geflogene Richtung angebunden ist, schätzt der `metar`-Job die Wahrheit begonnener und vergangener Fenster aus den gemessenen Winden. Die Zeitachse trennt strikt: Zukünftige Fenster zeigen die Prognose (`status forecast`), begonnene und vergangene die Wahrheit (`slot_actual`), und ohne Wahrheit zeigt ein begonnenes Fenster "keine Daten", niemals eine Prognose.
+
+- **Rechnung:** Je UTC-Stunde der mittlere Rückenwind für West, geglättet, dann dieselbe lineare Abbildung auf einen Ostanteil wie bei der Prognose (Band `west_back_tailwind_kn` bis `east_on_tailwind_kn`). Meldungen ohne Richtung (VRB) zählen nicht. `east_share` ist der Mittelwert, `truth` Ost ab mehr als `slot_majority`.
+- **Abdeckung:** Mindestens 70 Prozent der Stunden brauchen Meldungen mit Richtung, sonst entsteht keine Zeile. Bei laufenden Fenstern gilt das für den abgelaufenen Teil bis zur letzten vollen Stunde, die Schätzung wird mit jedem Lauf neu gerechnet. Fenster, die vor der ersten geholten Meldung beginnen, bleiben ausgelassen.
+- **Qualität:** `quality estimated`, `source wind_estimate`. Die API überschreibt damit nie eine Zeile mit `quality observed`, umgekehrt ersetzt eine echte Beobachtung die Schätzung.
+- **Anzeige:** Das Frontend zeigt die Schätzung als Anteil ("geschätzt: eher Ost"), nicht als Ost oder West, kräftig gefärbt. Prognosen sind blass und gestrichelt.
+- **Grenze:** Im Zwischenband von 0 bis 4 kn ist der Wind allein kein sicheres Maß. In der Nacht auf den 16.10.2026 lag der Rückenwind bei 3 bis 4 kn und es wurde durchgehend West geflogen, am 17.10. reichte etwa dasselbe für Ost. Deshalb ist die Schätzung ein Anteil, kein Urteil. Sie taugt auch nicht, um die Prognose zu bewerten, weil sie dasselbe Modell nutzt.
 
 ## Bekannte Grenzen (ehrlich)
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import api, archiv, konfiguration, modell, quellen
 
-JOB_VERSION = "1.1.1"
+JOB_VERSION = "1.1.2"
 ENV_DATEI = Path(__file__).resolve().parents[2] / ".env"
 
 
@@ -51,15 +51,23 @@ def metar(args):
     start = jetzt()
     status, fehler, geschrieben, gelesen = "ok", None, 0, 0
     try:
-        beobachtungen = quellen.metar_holen(stunden=24)
+        beobachtungen = quellen.metar_holen(stunden=args.stunden)
         gelesen = len(beobachtungen)
         nutzlast = [{**b, "recorded_at": modell.iso(start)} for b in beobachtungen]
+        fenster = modell.schaetze_fenster(beobachtungen, konfiguration.laden(), start)
         if args.trockenlauf:
-            print(json.dumps({"beobachtungen": len(nutzlast), "beispiel": nutzlast[:2]}, ensure_ascii=False, indent=2))
+            print(json.dumps({"beobachtungen": len(nutzlast), "geschaetzte_fenster": fenster, "beispiel": nutzlast[:2]},
+                             ensure_ascii=False, indent=2))
             return 0
         basis, token = api.konfiguration_aus_umgebung()
         antwort = api.senden(basis, token, "wind-observations", nutzlast)
         geschrieben = antwort.get("neu", 0)
+        if fenster:
+            try:
+                api.senden(basis, token, "slot-actuals", fenster)
+            except Exception as ausnahme:
+                status, fehler = "partial", f"slot-actuals: {ausnahme}"
+                print(f"metar: Schätzung nicht gespeichert: {ausnahme}", file=sys.stderr)
         protokollieren(basis, token, jobprotokoll("metar", start, status, gelesen, geschrieben, fehler))
         return 0
     except Exception as ausnahme:
@@ -147,6 +155,8 @@ def main(argv=None):
 
     metar_parser = unter.add_parser("metar", help="METAR EDDF als Winddaten speichern")
     metar_parser.add_argument("--trockenlauf", action="store_true", help="nur abrufen und ausgeben, nichts schreiben")
+    metar_parser.add_argument("--stunden", type=int, default=24, choices=range(1, 169), metavar="1-168",
+                              help="wie viele Stunden zurück die Meldungen geholt werden (für einen Nachtrag)")
     metar_parser.set_defaults(ausfuehren=metar)
 
     prognose_parser = unter.add_parser("forecast", help="Ensemble-Läufe holen, rechnen und speichern")

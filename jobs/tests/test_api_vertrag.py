@@ -70,3 +70,19 @@ def test_metar_beobachtung_besteht_das_schema():
     eintrag = {"observed_at": beobachtung["observed_at"], "speed_kn": beobachtung["speed_kn"],
                "direction_deg": beobachtung["direction_deg"], "source": "metar", "recorded_at": "2026-10-16T19:00:00.000Z"}
     _pruefer("wind_observation.schema.json").validate(eintrag)
+
+
+def test_geschaetzte_fenster_bestehen_das_slot_schema():
+    konf = konfiguration.laden()
+    start = datetime(2026, 10, 17, 4, tzinfo=timezone.utc)
+    beobachtungen = [
+        {"observed_at": modell.iso(start + timedelta(hours=h, minutes=20))[:19] + "Z", "speed_kn": 10.0,
+         "direction_deg": 70.0, "source": "metar"}
+        for h in range(11)
+    ]
+    zeilen = modell.schaetze_fenster(beobachtungen, konf, datetime(2026, 10, 17, 15, 17, tzinfo=timezone.utc))
+    assert zeilen
+    pruefer = _pruefer("slot_actual.schema.json")
+    for zeile in zeilen:
+        assert not list(pruefer.iter_errors(zeile)), zeile
+

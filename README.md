@@ -65,6 +65,66 @@ Details, configuration and deployment: [frontend/README.md](frontend/README.md).
 
 The jobs fetch wind data and forecasts and write them to the API. They run as containers on a schedule. See [docs/jobs.md](docs/jobs.md).
 
+### Run the jobs locally
+
+In production, Kubernetes CronJobs start the jobs on a schedule. Locally you start the same commands by hand.
+
+| CronJob (UTC) | Command |
+|---|---|
+| `betriebsrichtung-metar`, hourly at minute 17 | `python -m betriebsrichtung_jobs metar` |
+| `betriebsrichtung-forecast-1`, 04:30 | `python -m betriebsrichtung_jobs forecast --lauf-nummer 1` |
+| `betriebsrichtung-forecast-2`, 10:30 | `python -m betriebsrichtung_jobs forecast --lauf-nummer 2` |
+| `betriebsrichtung-forecast-3`, 16:30 | `python -m betriebsrichtung_jobs forecast --lauf-nummer 3` |
+
+**Shortcut with pnpm.** After the setup below, run the jobs from `frontend/` (the scripts use `jobs/.venv` if it exists, otherwise `python3`):
+
+```bash
+cd frontend
+pnpm dev:metar --trockenlauf       # dry run, writes nothing
+pnpm dev:forecast --trockenlauf
+pnpm dev:metar                     # writes to the local API from jobs/.env
+pnpm dev:forecast                  # run number is derived from the clock (4 to 99)
+pnpm dev:forecast --lauf-nummer 5  # or pick the number yourself
+```
+
+Add `--silent` (`pnpm -s dev:metar`) to hide pnpm's own output. The plain commands without pnpm are below.
+
+**Setup (once).** Python 3.11 to 3.13 is recommended (the container uses 3.11, the pinned Pydantic does not build on 3.14):
+
+```bash
+cd jobs
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+export PYTHONPATH=src
+```
+
+**Dry run.** Fetches the data and calculates, but writes nothing and needs neither the API nor a token. This is the safe default while you work on the model or `jobs/config/forecast.json`:
+
+```bash
+python -m betriebsrichtung_jobs metar --trockenlauf
+python -m betriebsrichtung_jobs forecast --lauf-nummer 1 --trockenlauf
+```
+
+**Write to a local API.** Start the API from the private API repository against its local development database, then create `jobs/.env` (git-ignored, read automatically):
+
+```bash
+BETRIEBSRICHTUNG_API_URL=http://127.0.0.1:5001/betriebsrichtung/v1
+BETRIEBSRICHTUNG_INGEST_TOKEN=<same value as BETRIEBSRICHTUNG_INGEST_TOKEN of the local API>
+```
+
+```bash
+python -m betriebsrichtung_jobs metar
+python -m betriebsrichtung_jobs forecast --lauf-nummer 1
+```
+
+Then run `pnpm dev` in `frontend/` (it proxies `/betriebsrichtung` to `127.0.0.1:5001`). The API caches the timeline for 5 minutes, so use a hard reload to see new values.
+
+Good to know:
+- **One forecast run per number and day.** A second call with the same `--lauf-nummer` on the same day answers `vorhanden` and writes nothing. For repeated local runs use a free number between 1 and 99 (for example 4, 5, 6).
+- **Other settings.** `BETRIEBSRICHTUNG_CONFIG=/path/to/forecast.json` uses another configuration, for example to try different thresholds in a dry run. `--archiv DIR` (or `BETRIEBSRICHTUNG_ARCHIV_DIR`) also stores the raw ensemble data.
+- **Windows that already started** show no forecast. The `metar` job estimates their truth from the measured wind (`quality estimated`). Run `pnpm dev:metar --stunden 96` once to backfill four days.
+- **Exit code.** A failed run exits with a non-zero code and prints the reason. The same run on the cluster is described in [docs/jobs.md](docs/jobs.md#cronjob-auf-dem-cluster-auslösen).
+
 ## Data sources
 
 - Wind forecasts: [Open-Meteo](https://open-meteo.com), CC BY 4.0, free use for non-commercial purposes.

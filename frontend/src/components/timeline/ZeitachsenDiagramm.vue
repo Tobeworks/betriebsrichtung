@@ -70,6 +70,7 @@ const hinweis = computed(() => {
         {{ texte.ostbetrieb }}
       </span>
     </figcaption>
+    <p class="text-fine">{{ texte.diagrammHinweis }}</p>
     <div class="flex flex-col gap-1">
       <div
         ref="rahmen"
@@ -87,9 +88,9 @@ const hinweis = computed(() => {
           shape-rendering="crispEdges"
         >
           <g v-for="s in spalten" :key="s.von">
-            <rect class="fill-west" :x="prozent(s.von)" y="0" :width="prozent(s.bis) - prozent(s.von)" :height="HOEHE * (1 - s.ost)" />
+            <rect :class="['fill-west', s.eintrag.status === 'forecast' ? 'opacity-60' : '']" :x="prozent(s.von)" y="0" :width="prozent(s.bis) - prozent(s.von)" :height="HOEHE * (1 - s.ost)" />
             <rect
-              class="fill-east"
+              :class="['fill-east', s.eintrag.status === 'forecast' ? 'opacity-60' : '']"
               :x="prozent(s.von)"
               :y="HOEHE * (1 - s.ost)"
               :width="prozent(s.bis) - prozent(s.von)"

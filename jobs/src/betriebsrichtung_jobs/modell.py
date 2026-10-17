@@ -125,6 +125,57 @@ def vorlauf_bucket(vorlauf_tage):
     return "d8_14"
 
 
+def stundenwerte(beobachtungen, ost_landebahn_grad):
+    """METAR-Meldungen zu einem mittleren Rückenwind (West) je UTC-Stunde. Meldungen ohne Richtung (VRB) zählen nicht."""
+    summen = {}
+    for beobachtung in beobachtungen:
+        if beobachtung["direction_deg"] is None:
+            continue
+        zeit = datetime.fromisoformat(beobachtung["observed_at"].replace("Z", "+00:00"))
+        stunde = zeit.replace(minute=0, second=0, microsecond=0)
+        summen.setdefault(stunde, []).append(
+            rueckenwind_west(beobachtung["speed_kn"], beobachtung["direction_deg"], ost_landebahn_grad)
+        )
+    return {stunde: sum(werte) / len(werte) for stunde, werte in sorted(summen.items())}
+
+
+def schaetze_fenster(beobachtungen, konfiguration, jetzt):
+    """Geschätzte Wahrheit (slot_actual, quality estimated) aus gemessenem Wind, nach derselben Regel wie die Prognose.
+
+    Das ist keine Beobachtung der Betriebsrichtung. Laufende Fenster zählen nur bis zur letzten vollen Stunde, ihre
+    Abdeckung bezieht sich auf diesen Teil und die Schätzung wird mit jedem Lauf neu gerechnet."""
+    dec = konfiguration["decision"]
+    rueckenwind = stundenwerte(beobachtungen, konfiguration["axis"]["east_landing_deg"])
+    if not rueckenwind:
+        return []
+    glatt = dict(zip(rueckenwind, gleitend(list(rueckenwind.values()), dec["smoothing_hours"])))
+    anteile = {
+        stunde: ost_anteil(wert, dec["west_back_tailwind_kn"], dec["east_on_tailwind_kn"])
+        for stunde, wert in glatt.items()
+    }
+    erste = next(iter(anteile))
+    volle_stunde = jetzt.replace(minute=0, second=0, microsecond=0)
+    zeilen = []
+    for datum, slot in sorted({fenster_von(stunde) for stunde in anteile}):
+        start, ende = fenstergrenzen(datum, slot)
+        bis = min(ende, volle_stunde)
+        stunden = int((bis - start).total_seconds() // 3600)
+        if start < erste or stunden < 1:
+            continue
+        werte = [anteil for stunde, anteil in anteile.items() if start <= stunde < bis]
+        abdeckung = len(werte) / stunden
+        if abdeckung < MIN_ABDECKUNG:
+            continue
+        ost = sum(werte) / len(werte)
+        zeilen.append({
+            "local_date": datum.isoformat(), "slot": slot, "window_start": iso(start), "window_end": iso(ende),
+            "east_share": round(ost, 4), "observed_share": round(abdeckung, 4),
+            "truth": "east" if ost > dec["slot_majority"] else "west",
+            "source": "wind_estimate", "quality": "estimated", "computed_at": iso(jetzt),
+        })
+    return zeilen
+
+
 def begrenzen(wert, untergrenze, obergrenze):
     return round(min(max(wert, untergrenze), obergrenze), 4)
 

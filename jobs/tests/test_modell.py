@@ -98,3 +98,55 @@ def test_richtungsmittel_um_nord_ist_nahe_null():
     mittel, laenge = modell.richtungsmittel([350, 10])
     assert min(mittel, 360 - mittel) < 0.01
     assert laenge > 0.98
+
+
+def beobachtung(zeit, geschwindigkeit, richtung):
+    return {"observed_at": modell.iso(zeit)[:19] + "Z", "speed_kn": geschwindigkeit, "direction_deg": richtung,
+            "source": "metar"}
+
+
+def test_stundenwerte_mitteln_je_stunde_und_ignorieren_vrb():
+    start = utc(2026, 10, 17, 4)
+    werte = modell.stundenwerte([
+        beobachtung(start + timedelta(minutes=20), 10, 70),
+        beobachtung(start + timedelta(minutes=50), 6, 70),
+        beobachtung(start + timedelta(hours=1, minutes=20), 5, None),
+    ], 70)
+    assert werte == {start: pytest.approx(8.0)}
+
+
+def schaetzung(richtung, geschwindigkeit, stunden, jetzt):
+    from betriebsrichtung_jobs import konfiguration
+    start = utc(2026, 10, 17, 4)
+    beobachtungen = [beobachtung(start + timedelta(hours=h, minutes=20), geschwindigkeit, richtung) for h in range(stunden)]
+    return modell.schaetze_fenster(beobachtungen, konfiguration.laden(), jetzt)
+
+
+def test_schaetzung_ost_bei_ostwind_fuer_beendetes_und_laufendes_fenster():
+    zeilen = schaetzung(70, 10, 11, utc(2026, 10, 17, 15, 17))
+    nach_fenster = {z["slot"]: z for z in zeilen}
+    assert set(nach_fenster) == {"morning", "afternoon"}
+    assert nach_fenster["morning"]["truth"] == "east"
+    assert nach_fenster["morning"]["east_share"] == 1.0
+    assert nach_fenster["morning"]["observed_share"] == 1.0
+    # laufend: Stunden 12 bis 14 UTC, bezogen auf den abgelaufenen Teil
+    assert nach_fenster["afternoon"]["observed_share"] == 1.0
+    assert all(z["quality"] == "estimated" and z["source"] == "wind_estimate" for z in zeilen)
+
+
+def test_schaetzung_west_bei_westwind():
+    zeilen = schaetzung(250, 10, 8, utc(2026, 10, 17, 13, 17))
+    assert [(z["slot"], z["truth"]) for z in zeilen] == [("morning", "west")]
+
+
+def test_schaetzung_ohne_genug_abdeckung_liefert_keine_zeile():
+    assert schaetzung(70, 10, 3, utc(2026, 10, 17, 13, 17)) == []
+
+
+def test_schaetzung_laesst_fenster_vor_der_ersten_meldung_aus():
+    # erste Meldung 06:20 UTC: das Vormittagsfenster (ab 04:00 UTC) ist unvollständig und bekommt nichts
+    from betriebsrichtung_jobs import konfiguration
+    start = utc(2026, 10, 17, 6)
+    beobachtungen = [beobachtung(start + timedelta(hours=h, minutes=20), 10, 70) for h in range(6)]
+    assert modell.schaetze_fenster(beobachtungen, konfiguration.laden(), utc(2026, 10, 17, 13, 17)) == []
+

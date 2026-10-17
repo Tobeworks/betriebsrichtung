@@ -40,4 +40,34 @@ describe("ZeitachsenListe", () => {
     expect(karte.text()).toContain("Nacht");
     expect(karte.text().match(/keine Daten/g)).toHaveLength(2);
   });
+
+  it("blendet frühere Tage standardmäßig aus und zeigt sie auf Knopfdruck", async () => {
+    const gestern = lokalesDatum(new Date(Date.now() - 86400000));
+    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [prognose(gestern), prognose(lokalesDatum(new Date()))] } });
+    expect(wrapper.findAll('ul[aria-label="Zeitachse"] > li')).toHaveLength(1);
+    const knopf = wrapper.find("button");
+    expect(knopf.text()).toContain("Frühere Tage anzeigen (1)");
+    await knopf.trigger("click");
+    expect(wrapper.findAll('ul[aria-label="Zeitachse"] > li')).toHaveLength(2);
+    expect(knopf.attributes("aria-expanded")).toBe("true");
+  });
+
+  it("trennt Prognose und geschätzte Wahrheit sichtbar und markiert das laufende Fenster", () => {
+    const jetzt = Date.now();
+    const geschaetzt = {
+      status: "estimated" as const, local_date: lokalesDatum(new Date()), slot: "afternoon" as const,
+      start: new Date(jetzt - 3600000).toISOString(), end: new Date(jetzt + 3600000).toISOString(),
+      runway_direction: "east" as const, east_share: 0.9, source: "wind_estimate" as const,
+    };
+    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [geschaetzt, prognose(lokalesDatum(new Date(jetzt + 86400000)))] } });
+    const text = wrapper.text();
+    expect(text).toContain("Nachmittag, läuft");
+    expect(text).toContain("geschätzt: eher Ost");
+    expect(text).toContain("Prognose: offen");
+    const zellen = wrapper.findAll("ul ul > li > div");
+    const geschaetztZelle = zellen.find((z) => z.text().includes("geschätzt:"));
+    const prognoseZelle = zellen.find((z) => z.text().includes("Prognose:"));
+    expect(prognoseZelle?.classes().join(" ")).toContain("border-dashed");
+    expect(geschaetztZelle?.classes().join(" ")).not.toContain("border-dashed");
+  });
 });

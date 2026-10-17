@@ -13,7 +13,8 @@ describe("beschreibeEintrag", () => {
   it("beschreibt eine Prognose mit Einordnung und Prozentwert", () => {
     expect(beschreibeEintrag(prognose)).toMatchObject({
       haupt: "60\u00a0%",
-      neben: "tendenziell Ost",
+      neben: "Prognose: tendenziell Ost",
+      prognose: true,
       zustand: "ost",
       text: "tendenziell Ost, Ostbetrieb 60 %",
       ostAnteil: 0.62,
@@ -45,7 +46,13 @@ describe("beschreibeEintrag", () => {
       east_share: 0.5,
       source: "wind_estimate",
     } satisfies Eintrag;
-    expect(beschreibeEintrag(geschaetzt)).toMatchObject({ zustand: "ost", text: "Ost, geschätzt" });
+    expect(beschreibeEintrag(geschaetzt)).toMatchObject({
+      zustand: "offen",
+      haupt: "50\u00a0%",
+      neben: "geschätzt: offen",
+      ostAnteil: 0.5,
+    });
+    expect(beschreibeEintrag({ ...geschaetzt, east_share: null })).toMatchObject({ zustand: "ost", text: "Ost, geschätzt" });
   });
 });
 
