@@ -5,10 +5,23 @@ import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from . import api, archiv, konfiguration, modell, quellen
 
 JOB_VERSION = "0.1.0"
+ENV_DATEI = Path(__file__).resolve().parents[2] / ".env"
+
+
+def umgebung_laden(pfad=ENV_DATEI):
+    if not pfad.exists():
+        return
+    for zeile in pfad.read_text(encoding="utf-8").splitlines():
+        zeile = zeile.strip()
+        if not zeile or zeile.startswith("#") or "=" not in zeile:
+            continue
+        schluessel, wert = zeile.split("=", 1)
+        os.environ.setdefault(schluessel.strip(), wert.strip())
 
 
 def jetzt():
@@ -128,6 +141,7 @@ def prognose(args):
 
 
 def main(argv=None):
+    umgebung_laden()
     parser = argparse.ArgumentParser(prog="betriebsrichtung_jobs")
     unter = parser.add_subparsers(dest="befehl", required=True)
 

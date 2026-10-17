@@ -82,7 +82,7 @@ Es gibt vier Muster, keines davon passt für Maschinen-Schreibzugriffe unveränd
 ## Tests
 
 - pytest, Tests in `tests/`. Die Interview-Tests laufen gegen eine Wegwerf-MySQL 8 auf `127.0.0.1:3306`, Datenbank `interview_test`. Der Fixture bricht ab, wenn die Verbindung auf eine andere Datenbank zeigt.
-- Start der Wegwerf-Datenbank: `docker run -d --name interview-test-db -e MYSQL_ROOT_PASSWORD=test-root -e MYSQL_DATABASE=interview_test -e MYSQL_USER=interview_test -e MYSQL_PASSWORD=interview_test -p 127.0.0.1:3306:3306 mysql:8`.
+- Datenbanken: lokaler Entwicklungsserver `local-mysql` auf `127.0.0.1:3306` (Einrichtung in `/Users/tobe/Sites/tools/local-db/README.md`). Kein `docker run` für Tests, auch nicht für einen einzelnen Lauf.
 - **Lücke:** `.github/workflows/build.yaml` baut nur das Image und pusht es nach `ghcr.io` (bei Push auf `master`). Die Tests laufen in keiner CI-Stufe. Der CI-Check aus Plan Abschnitt 7d ist neu.
 
 ## Logging
