@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router";
+import GithubIcon from "./components/layout/GithubIcon.vue";
 import SiteNav from "./components/layout/SiteNav.vue";
 import { site } from "./config/site";
 import { texte } from "./config/texte";
@@ -52,6 +53,13 @@ const version = __APP_VERSION__;
           {{ site.name }}, Version {{ version }},
           <a href="https://tobeworks.de" class="underline underline-offset-4">Tobeworks</a>
         </p>
+        <a
+          href="https://github.com/Tobeworks/betriebsrichtung"
+          class="touch-target inline-flex w-fit items-center gap-2 text-fine underline underline-offset-4"
+        >
+          <GithubIcon />
+          <span>{{ texte.quellcode }}</span>
+        </a>
       </div>
     </footer>
   </div>

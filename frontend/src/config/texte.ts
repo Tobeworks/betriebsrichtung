@@ -17,6 +17,7 @@ export const texte = {
   impressum: "Impressum",
   datenschutz: "Datenschutz",
   status: "Status",
+  quellcode: "Quellcode auf GitHub",
   nichtGefundenTitel: "Seite nicht gefunden",
   nichtGefundenText: "Diese Adresse gibt es nicht. Die Startseite erreichst du hier:",
   zurStartseite: "Zur Startseite",

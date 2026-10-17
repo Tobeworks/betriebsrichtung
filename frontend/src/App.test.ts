@@ -41,6 +41,13 @@ describe("App", () => {
     expect(wrapper.find("h1").text()).toContain("Seite nicht gefunden");
   });
 
+  it("verlinkt den Quellcode auf GitHub", async () => {
+    const wrapper = await oeffne("/");
+    const link = wrapper.find('a[href="https://github.com/Tobeworks/betriebsrichtung"]');
+    expect(link.exists()).toBe(true);
+    expect(link.text()).toContain("Quellcode auf GitHub");
+  });
+
   it("zeigt die Hauptnavigation mit allen vier Zielen", async () => {
     const wrapper = await oeffne("/");
     const hauptnavigation = wrapper.findAll('nav[aria-label="Hauptnavigation"]');
