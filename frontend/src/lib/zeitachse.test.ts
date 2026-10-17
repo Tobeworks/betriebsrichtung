@@ -1,19 +1,22 @@
 import { describe, expect, it } from "vitest";
 import type { Eintrag } from "./zeitachse";
 import { beispielZeitachse } from "../api/fixtures";
-import { beschreibeEintrag, slotName } from "./zeitachse";
+import { beschreibeEintrag, nachTagen, slotName } from "./zeitachse";
 
 const [beobachtet, prognose] = beispielZeitachse.items;
 
 describe("beschreibeEintrag", () => {
   it("beschreibt eine Beobachtung mit Richtung in Worten", () => {
-    expect(beschreibeEintrag(beobachtet)).toEqual({ zustand: "west", text: "West, beobachtet" });
+    expect(beschreibeEintrag(beobachtet)).toMatchObject({ zustand: "west", text: "West, beobachtet" });
   });
 
   it("beschreibt eine Prognose mit Einordnung und Prozentwert", () => {
-    expect(beschreibeEintrag(prognose)).toEqual({
+    expect(beschreibeEintrag(prognose)).toMatchObject({
+      haupt: "60\u00a0%",
+      neben: "tendenziell Ost",
       zustand: "ost",
       text: "tendenziell Ost, Ostbetrieb 60 %",
+      ostAnteil: 0.62,
     });
   });
 
@@ -28,7 +31,7 @@ describe("beschreibeEintrag", () => {
       east_share: null,
       source: null,
     } satisfies Eintrag;
-    expect(beschreibeEintrag(luecke)).toEqual({ zustand: "luecke", text: "keine Daten" });
+    expect(beschreibeEintrag(luecke)).toMatchObject({ zustand: "luecke", text: "keine Daten" });
   });
 
   it("kennzeichnet geschätzte Historie als geschätzt", () => {
@@ -42,7 +45,7 @@ describe("beschreibeEintrag", () => {
       east_share: 0.5,
       source: "wind_estimate",
     } satisfies Eintrag;
-    expect(beschreibeEintrag(geschaetzt)).toEqual({ zustand: "ost", text: "Ost, geschätzt" });
+    expect(beschreibeEintrag(geschaetzt)).toMatchObject({ zustand: "ost", text: "Ost, geschätzt" });
   });
 });
 
@@ -51,5 +54,15 @@ describe("slotName", () => {
     expect(slotName("morning")).toBe("Vormittag");
     expect(slotName("afternoon")).toBe("Nachmittag");
     expect(slotName("night")).toBe("Nacht");
+  });
+});
+
+describe("nachTagen", () => {
+  it("gruppiert die Fenster nach Tag und sortiert die Tage", () => {
+    const spaeter = { ...prognose, local_date: "2026-10-19", slot: "night" as const };
+    const tage = nachTagen([spaeter, beobachtet, prognose]);
+    expect(tage.map((t) => t.datum)).toEqual(["2026-10-15", "2026-10-18", "2026-10-19"]);
+    expect(Object.keys(tage[1].slots)).toEqual([prognose.slot]);
+    expect(tage[2].slots.night).toBe(spaeter);
   });
 });

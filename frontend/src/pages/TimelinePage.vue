@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ZeitachsenDiagramm from "../components/timeline/ZeitachsenDiagramm.vue";
 import ZeitachsenListe from "../components/timeline/ZeitachsenListe.vue";
 import { texte } from "../config/texte";
 import { useZeitachse } from "../composables/useZeitachse";
@@ -28,6 +29,9 @@ const { daten, laedt, fehler, beispiel, laden } = useZeitachse();
       </button>
     </div>
 
-    <ZeitachsenListe v-else-if="daten" :eintraege="daten.items" />
+    <template v-else-if="daten">
+      <ZeitachsenDiagramm :eintraege="daten.items" />
+      <ZeitachsenListe :eintraege="daten.items" />
+    </template>
   </section>
 </template>
