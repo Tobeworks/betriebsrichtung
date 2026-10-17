@@ -26,6 +26,7 @@ describe("App", () => {
     const wrapper = await oeffne("/");
     expect(wrapper.text()).toContain("Zum Inhalt springen");
     expect(wrapper.find("h1").text()).toContain("Betriebsrichtung");
+    expect(wrapper.find("header").text()).toMatch(/v\d+\.\d+\.\d+/);
     expect(wrapper.findAll("li").length).toBeGreaterThanOrEqual(3);
   });
 

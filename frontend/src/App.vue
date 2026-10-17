@@ -19,8 +19,9 @@ const version = __APP_VERSION__;
 
     <header class="hairline border-x-0 border-t-0 pt-[env(safe-area-inset-top)]">
       <div class="page-container flex items-center justify-between gap-4 py-3">
-        <RouterLink to="/" class="touch-target inline-flex items-center font-semibold text-foreground">
+        <RouterLink to="/" class="touch-target inline-flex items-center gap-2 font-semibold text-foreground">
           {{ site.name }}
+          <span class="text-fine font-normal">v{{ version }}</span>
         </RouterLink>
         <SiteNav variante="oben" />
       </div>

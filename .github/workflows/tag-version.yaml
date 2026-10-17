@@ -1,0 +1,33 @@
+name: Version taggen
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  taggen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Versions-Tags setzen
+        run: |
+          VERSION=$(node -p "require('./frontend/package.json').version")
+          MAJOR=${VERSION%%.*}
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" > /dev/null; then
+            echo "v${VERSION} existiert schon"
+          else
+            git tag "v${VERSION}"
+            git push origin "v${VERSION}"
+          fi
+          if [ "$MAJOR" -ge 1 ]; then
+            git tag -f "v${MAJOR}"
+            git push origin "v${MAJOR}" --force
+          fi
