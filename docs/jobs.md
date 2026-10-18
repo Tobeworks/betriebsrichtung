@@ -9,7 +9,7 @@ python -m betriebsrichtung_jobs metar [--trockenlauf]
 python -m betriebsrichtung_jobs forecast --lauf-nummer 1-99 [--archiv DIR] [--trockenlauf]
 ```
 
-- `metar`: holt die METAR-Meldungen von EDDF der letzten 24 Stunden (`--stunden 1-168` für einen Nachtrag), speichert sie als Winddaten (`wind-observations`) und schätzt daraus die Wahrheit der begonnenen Fenster (`slot-actuals`, siehe unten).
+- `metar`: holt die METAR-Meldungen von EDDF der letzten 24 Stunden, speichert sie als Winddaten (`wind-observations`). Daraus rechnet die API die geschätzte Wahrheit (siehe unten).
 - `forecast`: holt für jedes Modell in `jobs/config/forecast.json` das 14-Tage-Ensemble, rechnet Ostwahrscheinlichkeiten je Zeitfenster und schreibt den Lauf atomar (`forecast-configs`, `forecast-runs`).
 - `--trockenlauf`: rechnet und gibt aus, schreibt nichts und archiviert nichts.
 - Ein Lauf protokolliert sich am Ende mit einem Eintrag in `job-runs`.
@@ -56,15 +56,16 @@ Der geglättete Rückenwind für West wird je Stunde und Ensemble-Mitglied linea
 
 Die Bandgrenzen sind vorläufig. Sie wurden gegen die 15 Fenster der Umwelthaus-Prognose vom 17.10.2026 abgeglichen (Zustände 1, 2, 3 dort: West, Wechsel möglich, Ost), nicht gegen beobachtete Richtungen. `min_dwell_hours` und `slot_majority` bleiben in der Konfiguration, weil das Schema sie verlangt, sie werden nicht mehr ausgewertet.
 
-## Geschätzte Wahrheit aus Messwind
+## Geschätzte Wahrheit aus Messwind (Rechnung in der API)
 
-Solange keine Quelle für die geflogene Richtung angebunden ist, schätzt der `metar`-Job die Wahrheit begonnener und vergangener Fenster aus den gemessenen Winden. Die Zeitachse trennt strikt: Zukünftige Fenster zeigen die Prognose (`status forecast`), begonnene und vergangene die Wahrheit (`slot_actual`), und ohne Wahrheit zeigt ein begonnenes Fenster "keine Daten", niemals eine Prognose.
+Solange keine Quelle für die geflogene Richtung angebunden ist, schätzt die **API** beim Lesen der Zeitachse die Wahrheit begonnener und vergangener Fenster aus den gespeicherten Winddaten (`wind_observation`, die der `metar`-Job liefert). Der Job selbst schreibt dafür nichts, es braucht keinen Nachtrag, und jede Datenbank mit Winddaten zeigt sie sofort. Die Zeitachse trennt strikt: Zukünftige Fenster zeigen die Prognose (`status forecast`), begonnene und vergangene die Wahrheit (`slot_actual` geht vor, sonst die Schätzung mit `status estimated`). Ohne Wahrheit zeigt ein begonnenes Fenster "keine Daten", niemals eine Prognose.
 
-- **Rechnung:** Je UTC-Stunde der mittlere Rückenwind für West, geglättet, dann dieselbe lineare Abbildung auf einen Ostanteil wie bei der Prognose (Band `west_back_tailwind_kn` bis `east_on_tailwind_kn`). Meldungen ohne Richtung (VRB) zählen nicht. `east_share` ist der Mittelwert, `truth` Ost ab mehr als `slot_majority`.
-- **Abdeckung:** Mindestens 70 Prozent der Stunden brauchen Meldungen mit Richtung, sonst entsteht keine Zeile. Bei laufenden Fenstern gilt das für den abgelaufenen Teil bis zur letzten vollen Stunde, die Schätzung wird mit jedem Lauf neu gerechnet. Fenster, die vor der ersten geholten Meldung beginnen, bleiben ausgelassen.
-- **Qualität:** `quality estimated`, `source wind_estimate`. Die API überschreibt damit nie eine Zeile mit `quality observed`, umgekehrt ersetzt eine echte Beobachtung die Schätzung.
-- **Anzeige:** Das Frontend zeigt die Schätzung als Anteil ("geschätzt: eher Ost"), nicht als Ost oder West, kräftig gefärbt. Prognosen sind blass und gestrichelt.
-- **Grenze:** Im Zwischenband von 0 bis 4 kn ist der Wind allein kein sicheres Maß. In der Nacht auf den 16.10.2026 lag der Rückenwind bei 3 bis 4 kn und es wurde durchgehend West geflogen, am 17.10. reichte etwa dasselbe für Ost. Deshalb ist die Schätzung ein Anteil, kein Urteil. Sie taugt auch nicht, um die Prognose zu bewerten, weil sie dasselbe Modell nutzt.
+- **Code:** `api/betriebsrichtung_schaetzung.py` im API-Repo. Die Parameter (`east_on_tailwind_kn`, `smoothing_hours`, `min_dwell_hours`, `slot_majority`, Achse) kommen aus der zuletzt gespeicherten Konfiguration, also aus derselben Quelle wie die Prognose.
+- **Rechnung:** Je UTC-Stunde der mittlere Rückenwind für West (Meldungen ohne Richtung, VRB, zählen als 0), geglättet. Daraus ein Zustand je Stunde mit Hysterese: Die laufende Richtung bleibt, bis der Rückenwind für sie `east_on_tailwind_kn` überschreitet, in beide Richtungen. Bei Flaute bleibt also die Richtung stehen, so wie die DFS sie hält. `east_share` ist der Ost-Anteil der Stunden im Fenster, `truth` Ost ab mehr als `slot_majority`.
+- **Abdeckung:** Mindestens 70 Prozent der Stunden brauchen Meldungen, sonst entsteht keine Zeile. Bei laufenden Fenstern gilt das für den abgelaufenen Teil, die Schätzung ändert sich mit jeder neuen Meldung.
+- **Anzeige:** Das Frontend zeigt die Schätzung als Anteil ("geschätzt: Ost"), kräftig gefärbt. Prognosen sind blass und gestrichelt ("Prognose: ...").
+- **Prüfung:** Gegen die Umwelthaus-Anzeige vom 17.10.2026 stimmen alle Fenster seit dem 13.10. bis auf den Beginn von Ost am 17.10.: Die DFS wechselte um 11:16 Uhr bei etwa 3 kn Rückenwind (Nordwind), die Rechnung erst bei mehr als 4 kn am Nachmittag.
+- **Grenze:** Die Schätzung nutzt Wind und Hysterese, aber nicht alles, was die DFS berücksichtigt (Höhenwind, Pilotenmeldungen, Bahn 18). Sie taugt auch nicht, um die Prognose zu bewerten, weil sie vom selben Wind abhängt.
 
 ## Bekannte Grenzen (ehrlich)
 

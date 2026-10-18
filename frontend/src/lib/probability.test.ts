@@ -15,11 +15,12 @@ describe("prozentText", () => {
 
 describe("einordnen", () => {
   it.each([
-    [0.19, "eher West", "west"],
-    [0.2, "tendenziell West", "west"],
+    [0.24, "West", "west"],
+    [0.25, "tendenziell West", "west"],
     [0.4, "offen", "offen"],
     [0.6, "tendenziell Ost", "ost"],
-    [0.8, "eher Ost", "ost"],
+    [0.74, "tendenziell Ost", "ost"],
+    [0.75, "Ost", "ost"],
   ])("ordnet %s als %s ein", (wert, klasse, richtung) => {
     const ergebnis = einordnen(wert);
     expect(ergebnis.klasse).toBe(klasse);

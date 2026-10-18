@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AktuelleRichtung from "../components/timeline/AktuelleRichtung.vue";
 import ZeitachsenDiagramm from "../components/timeline/ZeitachsenDiagramm.vue";
 import ZeitachsenListe from "../components/timeline/ZeitachsenListe.vue";
 import { texte } from "../config/texte";
@@ -30,6 +31,7 @@ const { daten, laedt, fehler, beispiel, laden } = useZeitachse();
     </div>
 
     <template v-else-if="daten">
+      <AktuelleRichtung :eintraege="daten.items" />
       <ZeitachsenDiagramm :eintraege="daten.items" />
       <ZeitachsenListe :eintraege="daten.items" />
     </template>

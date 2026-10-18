@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/evaluation.response.schema.json",
+  "title": "Antwort Prognosegüte",
+  "description": "Prognosegüte für GET /betriebsrichtung/v1/evaluation: Vergleich der Prognosen mit der Wahrheit abgelaufener Fenster, nach Vorlaufklasse. Die Wahrheit kann aus Messwind geschätzt sein, estimated_share nennt den Anteil. hit_rate und brier gelten für die Prognose, die mit _west für die Baseline immer West.",
+  "type": "object",
+  "x-schema-version": 1,
+  "required": ["schema", "generated_at", "days", "windows", "east_share", "estimated_share", "classes"],
+  "properties": {
+    "schema": { "const": 1 },
+    "generated_at": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+    "days": { "type": "integer", "minimum": 1, "maximum": 365, "description": "Betrachteter Zeitraum in Tagen bis heute." },
+    "windows": { "type": "integer", "minimum": 0, "description": "Anzahl abgelaufener Fenster mit Wahrheit und mindestens einer Prognose." },
+    "east_share": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }],
+      "description": "Anteil der Fenster mit Ostbetrieb, null ohne Fenster."
+    },
+    "estimated_share": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }],
+      "description": "Anteil der Fenster, deren Wahrheit aus Messwind geschätzt ist, null ohne Fenster."
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["lead_class", "comparisons", "hit_rate", "hit_rate_west", "brier", "brier_west", "skill_west"],
+        "properties": {
+          "lead_class": { "enum": ["1_tag", "2_3_tage", "4_7_tage", "8_14_tage"] },
+          "comparisons": { "type": "integer", "minimum": 0 },
+          "hit_rate": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
+          "hit_rate_west": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
+          "brier": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
+          "brier_west": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
+          "skill_west": { "type": ["number", "null"], "maximum": 1, "description": "Brier Skill Score gegen immer West, positiv ist besser als die Baseline." }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDatum, formatUhrzeit, lokalesDatum } from "./format";
+import { formatDatum, formatDauer, formatUhrzeit, ganzProzent, lokalesDatum } from "./format";
 
 describe("Zeitformate", () => {
   it("formatiert ein lokales Datum auf Deutsch", () => {
@@ -15,3 +15,16 @@ describe("Zeitformate", () => {
     expect(lokalesDatum(new Date("2026-10-24T20:30:00Z"))).toBe("2026-10-24");
   });
 });
+
+describe("Zahlenformate", () => {
+  it("formatiert Dauern mit richtiger Einzahl und Mehrzahl", () => {
+    expect(formatDauer(8)).toBe("8\u00a0Std.");
+    expect(formatDauer(24)).toBe("1\u00a0Tag");
+    expect(formatDauer(50)).toBe("2\u00a0Tage 2\u00a0Std.");
+  });
+
+  it("rundet Prozentwerte auf ganze Zahlen mit geschütztem Leerzeichen", () => {
+    expect(ganzProzent(0.504)).toBe("50\u00a0%");
+  });
+});
+

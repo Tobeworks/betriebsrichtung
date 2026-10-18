@@ -122,7 +122,7 @@ Then run `pnpm dev` in `frontend/` (it proxies `/betriebsrichtung` to `127.0.0.1
 Good to know:
 - **One forecast run per number and day.** A second call with the same `--lauf-nummer` on the same day answers `vorhanden` and writes nothing. For repeated local runs use a free number between 1 and 99 (for example 4, 5, 6).
 - **Other settings.** `BETRIEBSRICHTUNG_CONFIG=/path/to/forecast.json` uses another configuration, for example to try different thresholds in a dry run. `--archiv DIR` (or `BETRIEBSRICHTUNG_ARCHIV_DIR`) also stores the raw ensemble data.
-- **Windows that already started** show no forecast. The `metar` job estimates their truth from the measured wind (`quality estimated`). Run `pnpm dev:metar --stunden 96` once to backfill four days.
+- **Windows that already started** show no forecast. The API estimates their truth from the stored wind observations (`status estimated`), so run `pnpm dev:metar` to keep the wind data current.
 - **Exit code.** A failed run exits with a non-zero code and prints the reason. The same run on the cluster is described in [docs/jobs.md](docs/jobs.md#cronjob-auf-dem-cluster-auslösen).
 
 ## Data sources

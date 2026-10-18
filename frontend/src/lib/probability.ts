@@ -18,8 +18,9 @@ export function prozentText(wahrscheinlichkeit: number): string {
 }
 
 export function einordnen(wahrscheinlichkeit: number): Einordnung {
-  if (wahrscheinlichkeit < 0.2) {
-    return { klasse: texte.einordnung.eherWest, richtung: "west" };
+  // Nur der Übergangsbereich von 25 bis 75 Prozent trägt Zusätze wie tendenziell oder offen.
+  if (wahrscheinlichkeit < 0.25) {
+    return { klasse: texte.einordnung.west, richtung: "west" };
   }
   if (wahrscheinlichkeit < 0.4) {
     return { klasse: texte.einordnung.tendenziellWest, richtung: "west" };
@@ -27,8 +28,8 @@ export function einordnen(wahrscheinlichkeit: number): Einordnung {
   if (wahrscheinlichkeit < 0.6) {
     return { klasse: texte.einordnung.offen, richtung: "offen" };
   }
-  if (wahrscheinlichkeit < 0.8) {
+  if (wahrscheinlichkeit < 0.75) {
     return { klasse: texte.einordnung.tendenziellOst, richtung: "ost" };
   }
-  return { klasse: texte.einordnung.eherOst, richtung: "ost" };
+  return { klasse: texte.einordnung.ost, richtung: "ost" };
 }

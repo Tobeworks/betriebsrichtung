@@ -76,6 +76,13 @@ West und Ost tragen nie die Farbe allein. Jede Zelle zeigt den Richtungstext, et
 - **Versionen:** Alle Pakete sind exakt gepinnt und mindestens 14 Tage alt zum Zeitpunkt der Auswahl. `pnpm-lock.yaml` ist eingecheckt.
 - **Kein Dark Mode**, die Tokens sind aber so angelegt, dass er später über die Variablen folgen kann.
 
+## Seiten Verlauf, Statistik und Güte
+
+- **Verlauf (`/`):** Kachel "Aktuell" mit großem Flugzeug (türkis Ost, grün West, gespiegelt nach der Richtung), darunter Diagramm der nächsten sieben Tage und Tageskarten mit Vormittag, Nachmittag und Nacht. Begonnene Fenster zeigen die aus Messwind geschätzte Wahrheit ("geschätzt: ..."), künftige die Prognose ("Prognose: ...", blass und gestrichelt). Beschriftung: unter 25 Prozent "West", 25 bis 40 "tendenziell West", 40 bis 60 "offen", 60 bis 75 "tendenziell Ost", ab 75 "Ost".
+- **Statistik (`/statistik`):** Rechnet das Frontend aus der Zeitachse der letzten 30 Tage (`lib/statistik.ts`): Ostanteil, Tage mit überwiegend Ost, längste Ostphase, Ostanteil je Tag und je Tageszeit. Ein Tag zählt als überwiegend Ost bei mehr als 50 Prozent. Der Vergleichswert von etwa einem Viertel Ost im langjährigen Mittel stammt aus der Erklärseite des Umwelthauses.
+- **Güte (`/prognosegute`):** Liest `GET /betriebsrichtung/v1/evaluation?days=90`. Die API vergleicht je abgelaufenem Fenster mit Wahrheit die Prognose der jeweiligen Vorlaufklasse (bis 1 Tag, 2 bis 3, 4 bis 7, 8 bis 14 Tage; je Fenster und Klasse die letzte Prognose) mit dem Ergebnis. Gezeigt werden Trefferquote bei Schwelle 0,5 gegen die Baseline "immer West"; Brier-Score und Verbesserung stehen im aufklappbaren Erklärbereich. Solange die Wahrheit aus Messwind geschätzt ist, steht ein Hinweis dabei, und unter 20 Vergleichen "noch wenige Vergleiche".
+- **Dev-Server:** Der Proxy setzt `Cache-Control: no-store`, damit ein lokaler Joblauf sofort sichtbar ist. Die echte API cached fünf Minuten.
+
 ## Noch offen
 
 - **Content-Security-Policy:** Fehlt. Sie braucht die API-Domain in `connect-src`, die erst mit dem Deploy feststeht.

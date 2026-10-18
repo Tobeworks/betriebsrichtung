@@ -41,6 +41,23 @@ export function formatWochentag(lokalesDatum: string): string {
   return wochentagFormat.format(new Date(`${lokalesDatum}T12:00:00Z`));
 }
 
+export function ganzProzent(anteil: number): string {
+  return `${Math.round(anteil * 100)}\u00a0%`;
+}
+
+export function formatDauer(stunden: number): string {
+  const tage = Math.floor(stunden / 24);
+  const rest = stunden % 24;
+  if (tage === 0) {
+    return `${rest}\u00a0Std.`;
+  }
+  return `${tage}\u00a0${tage === 1 ? "Tag" : "Tage"}${rest === 0 ? "" : ` ${rest}\u00a0Std.`}`;
+}
+
+export function formatTagMonat(lokalesDatum: string): string {
+  return `${lokalesDatum.slice(8, 10)}.${lokalesDatum.slice(5, 7)}.`;
+}
+
 export function formatUhrzeit(zeitpunkt: string): string {
   return uhrzeitFormat.format(new Date(zeitpunkt));
 }

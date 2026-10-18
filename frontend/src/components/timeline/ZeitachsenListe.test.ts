@@ -62,7 +62,7 @@ describe("ZeitachsenListe", () => {
     const wrapper = mount(ZeitachsenListe, { props: { eintraege: [geschaetzt, prognose(lokalesDatum(new Date(jetzt + 86400000)))] } });
     const text = wrapper.text();
     expect(text).toContain("Nachmittag, läuft");
-    expect(text).toContain("geschätzt: eher Ost");
+    expect(text).toContain("geschätzt: Ost");
     expect(text).toContain("Prognose: offen");
     const zellen = wrapper.findAll("ul ul > li > div");
     const geschaetztZelle = zellen.find((z) => z.text().includes("geschätzt:"));
