@@ -36,4 +36,14 @@ describe("aktuelleRichtung", () => {
     };
     expect(aktuelleRichtung([prognose], JETZT)).toEqual({ richtung: "ost", herkunft: "prognose" });
   });
+
+  it("nimmt bei einem laufenden Fenster die letzte geschätzte Richtung statt der Mischung", () => {
+    const laufend: Eintrag = {
+      status: "running", local_date: "2026-10-18", slot: "morning", start: "2026-10-18T04:00:00Z", end: "2026-10-18T12:00:00Z",
+      east_share: 0.4, actual_share: 0.25, east_actual: 0, p_east_rest: 0.5, known_until: "2026-10-18T06:00:00Z",
+      latest_direction: "west",
+    };
+    expect(aktuelleRichtung([laufend], JETZT)).toEqual({ richtung: "west", herkunft: "geschaetzt" });
+    expect(aktuelleRichtung([{ ...laufend, latest_direction: null, east_share: 0.7 }], JETZT)).toEqual({ richtung: "ost", herkunft: "prognose" });
+  });
 });

@@ -13,6 +13,12 @@ function ausEintrag(eintrag: Eintrag): Aktuell {
   if (eintrag.status === "forecast") {
     return { richtung: eintrag.p_east >= 0.5 ? "ost" : "west", herkunft: "prognose" };
   }
+  if (eintrag.status === "running") {
+    if (eintrag.latest_direction !== null) {
+      return { richtung: eintrag.latest_direction === "east" ? "ost" : "west", herkunft: "geschaetzt" };
+    }
+    return { richtung: eintrag.east_share >= 0.5 ? "ost" : "west", herkunft: "prognose" };
+  }
   if (eintrag.status === "gap" || eintrag.runway_direction === null) {
     return KEINE;
   }
@@ -30,7 +36,7 @@ export function aktuelleRichtung(eintraege: Eintrag[], jetzt: number): Aktuell {
     return ausLaufend;
   }
   const davor = eintraege
-    .filter((e) => Date.parse(e.start) <= jetzt && e.status !== "forecast")
+    .filter((e) => Date.parse(e.start) <= jetzt && e.status !== "forecast" && e.status !== "running")
     .sort((a, b) => Date.parse(b.start) - Date.parse(a.start))
     .map(ausEintrag)
     .find((a) => a.richtung);

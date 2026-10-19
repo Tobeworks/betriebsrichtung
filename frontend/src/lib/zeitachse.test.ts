@@ -64,6 +64,25 @@ describe("slotName", () => {
   });
 });
 
+describe("beschreibeEintrag laufendes Fenster", () => {
+  const laufendEintrag = {
+    status: "running", local_date: "2026-10-19", slot: "morning", start: "2026-10-19T04:00:00.000Z",
+    end: "2026-10-19T12:00:00.000Z", east_share: 0.97, actual_share: 0.25, east_actual: 1, p_east_rest: 0.96,
+    known_until: "2026-10-19T06:00:00.000Z", latest_direction: "east",
+  } satisfies Eintrag;
+
+  it("zeigt die Mischung aus bekanntem Teil und Prognose", () => {
+    expect(beschreibeEintrag(laufendEintrag)).toMatchObject({
+      zustand: "ost", haupt: "über 95\u00a0%", neben: "bisher geschätzt, Rest Prognose", ostAnteil: 0.97, gemischt: true,
+    });
+  });
+
+  it("ist ohne bekannten Teil reine Prognose", () => {
+    const ohne = { ...laufendEintrag, actual_share: 0, east_actual: null, latest_direction: null };
+    expect(beschreibeEintrag(ohne)).toMatchObject({ prognose: true, gemischt: false, neben: "Prognose: Ost" });
+  });
+});
+
 describe("nachTagen", () => {
   it("gruppiert die Fenster nach Tag und sortiert die Tage", () => {
     const spaeter = { ...prognose, local_date: "2026-10-19", slot: "night" as const };

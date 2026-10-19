@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://betriebsrichtung.tobeworks.de/schema/timeline.response.schema.json",
   "title": "Antwort Zeitachse",
-  "description": "Vorberechnete Zeitachse für GET /betriebsrichtung/v1/timeline. Je Tag und Fenster entweder die Wahrheit (observed, estimated, gap) oder die neueste Prognose (forecast). Regeln: bei gap ist runway_direction null. Ein Eintrag mit status forecast trägt p_east, nie runway_direction.",
+  "description": "Vorberechnete Zeitachse für GET /betriebsrichtung/v1/timeline. Je Tag und Fenster die Wahrheit (observed, estimated, gap) für vergangene, eine Mischung aus bekanntem Teil und Prognose (running) für das laufende und die neueste Prognose (forecast) für künftige Fenster. Regeln: bei gap ist runway_direction null. Ein Eintrag mit status forecast trägt p_east, nie runway_direction.",
   "type": "object",
   "x-schema-version": 1,
   "required": ["schema", "generated_at", "data_through", "timezone", "skill_horizon_days", "skill_horizon_provisional", "items"],
@@ -26,7 +26,8 @@
       "items": {
         "oneOf": [
           { "$ref": "#/$defs/eintrag_wahrheit" },
-          { "$ref": "#/$defs/eintrag_prognose" }
+          { "$ref": "#/$defs/eintrag_prognose" },
+          { "$ref": "#/$defs/eintrag_laufend" }
         ]
       }
     }
@@ -49,6 +50,37 @@
         "east_share": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
         "source": {
           "anyOf": [{ "$ref": "common.schema.json#/$defs/beobachtungsquelle" }, { "type": "null" }]
+        }
+      }
+    },
+    "eintrag_laufend": {
+      "type": "object",
+      "description": "Fenster, das gerade läuft: der bisher bekannte Teil aus gemessenem Wind (geschätzt) und der Rest aus der zuletzt vor Beginn gerechneten Prognose, zeitgewichtet zu east_share gemischt. Wahrheit und Prognose bleiben einzeln erkennbar.",
+      "required": ["status", "local_date", "slot", "start", "end", "east_share", "actual_share", "east_actual", "p_east_rest", "known_until", "latest_direction"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "const": "running" },
+        "local_date": { "$ref": "common.schema.json#/$defs/lokales_datum" },
+        "slot": { "$ref": "common.schema.json#/$defs/zeitfenster" },
+        "start": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "end": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+        "east_share": { "$ref": "common.schema.json#/$defs/anteil", "description": "Mischung aus bekanntem Teil und Prognose für den Rest." },
+        "actual_share": { "$ref": "common.schema.json#/$defs/anteil", "description": "Anteil des Fensters, der durch gemessenen Wind bekannt ist, 0 ohne brauchbare Meldungen." },
+        "east_actual": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }],
+          "description": "Ostanteil des bekannten Teils, null wenn kein Teil bekannt ist."
+        },
+        "p_east_rest": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/wahrscheinlichkeit" }, { "type": "null" }],
+          "description": "Prognose für das Fenster, die für den Rest gilt, null ohne Prognose."
+        },
+        "known_until": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/zeitpunkt" }, { "type": "null" }],
+          "description": "Ende der letzten Stunde mit gemessenem Wind, höchstens jetzt."
+        },
+        "latest_direction": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/betriebsrichtung" }, { "type": "null" }],
+          "description": "Geschätzte Richtung in der letzten Stunde mit gemessenem Wind, auch wenn sie vor dem Fenster liegt."
         }
       }
     },

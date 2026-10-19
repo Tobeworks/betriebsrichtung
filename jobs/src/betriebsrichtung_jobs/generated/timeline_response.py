@@ -38,6 +38,45 @@ class EintragWahrheit(BaseModel):
     source: Optional[common.Beobachtungsquelle] = None
 
 
+class EintragLaufend(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    status: Literal['running']
+    local_date: date = Field(
+        ..., description='Lokaler Kalendertag in Europe/Berlin, bestimmt im Backend.'
+    )
+    slot: common.Zeitfenster
+    start: datetime = Field(
+        ..., description='Zeitpunkt in UTC nach ISO 8601 mit Suffix Z.'
+    )
+    end: datetime = Field(
+        ..., description='Zeitpunkt in UTC nach ISO 8601 mit Suffix Z.'
+    )
+    east_share: confloat(ge=0.0, le=1.0) = Field(
+        ..., description='Mischung aus bekanntem Teil und Prognose für den Rest.'
+    )
+    actual_share: confloat(ge=0.0, le=1.0) = Field(
+        ...,
+        description='Anteil des Fensters, der durch gemessenen Wind bekannt ist, 0 ohne brauchbare Meldungen.',
+    )
+    east_actual: Optional[confloat(ge=0.0, le=1.0)] = Field(
+        ...,
+        description='Ostanteil des bekannten Teils, null wenn kein Teil bekannt ist.',
+    )
+    p_east_rest: Optional[confloat(ge=0.0, le=1.0)] = Field(
+        ...,
+        description='Prognose für das Fenster, die für den Rest gilt, null ohne Prognose.',
+    )
+    known_until: Optional[datetime] = Field(
+        ..., description='Ende der letzten Stunde mit gemessenem Wind, höchstens jetzt.'
+    )
+    latest_direction: Optional[common.Betriebsrichtung] = Field(
+        ...,
+        description='Geschätzte Richtung in der letzten Stunde mit gemessenem Wind, auch wenn sie vor dem Fenster liegt.',
+    )
+
+
 class EintragPrognose(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -89,4 +128,4 @@ class AntwortZeitachse(BaseModel):
         ...,
         description='true, solange zu wenige Daten vorliegen und der Standardwert 7 gilt.',
     )
-    items: list[Union[EintragWahrheit, EintragPrognose]]
+    items: list[Union[EintragWahrheit, EintragPrognose, EintragLaufend]]

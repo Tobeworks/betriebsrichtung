@@ -43,7 +43,11 @@ describe("statistik", () => {
       p_east: 1, p_east_raw: 1, lead_hours: 1, computed_at: "2026-10-18T00:00:00Z", members: 1, calibrated: false,
     };
     const luecke = fenster("2026-10-18", "afternoon", "2026-10-18T12:00", "2026-10-18T20:00", null, "gap");
-    const s = statistik([prognose, luecke]);
+    const laufend: Eintrag = {
+      status: "running", local_date: "2026-10-18", slot: "night", start: "2026-10-18T20:00:00.000Z", end: "2026-10-19T04:00:00.000Z",
+      east_share: 1, actual_share: 0.5, east_actual: 1, p_east_rest: 1, known_until: "2026-10-19T00:00:00.000Z", latest_direction: "east",
+    };
+    const s = statistik([prognose, luecke, laufend]);
     expect(s.fenster).toBe(0);
     expect(s.ostanteil).toBeNull();
     expect(s.tage).toEqual([]);

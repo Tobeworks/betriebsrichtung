@@ -71,7 +71,7 @@ In production, Kubernetes CronJobs start the jobs on a schedule. Locally you sta
 
 | CronJob (UTC) | Command |
 |---|---|
-| `betriebsrichtung-metar`, hourly at minute 17 | `python -m betriebsrichtung_jobs metar` |
+| `betriebsrichtung-metar`, at minute 27 and 57 | `python -m betriebsrichtung_jobs metar` |
 | `betriebsrichtung-forecast-1`, 04:30 | `python -m betriebsrichtung_jobs forecast --lauf-nummer 1` |
 | `betriebsrichtung-forecast-2`, 10:30 | `python -m betriebsrichtung_jobs forecast --lauf-nummer 2` |
 | `betriebsrichtung-forecast-3`, 16:30 | `python -m betriebsrichtung_jobs forecast --lauf-nummer 3` |

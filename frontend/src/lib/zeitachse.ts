@@ -13,6 +13,7 @@ export interface Beschreibung {
   neben: string;
   ostAnteil?: number;
   prognose?: boolean;
+  gemischt?: boolean;
 }
 
 export function slotName(slot: string): string {
@@ -46,6 +47,20 @@ export function beschreibeEintrag(eintrag: Eintrag): Beschreibung {
       haupt: prozentText(eintrag.east_share),
       neben: `${texte.geschaetzt}: ${einordnung.klasse}`,
       ostAnteil: eintrag.east_share,
+    };
+  }
+  if (eintrag.status === "running") {
+    // Laufendes Fenster: bisher bekannter Teil aus Messwind, Rest aus der Prognose. Ohne bekannten Teil ist es reine Prognose.
+    const einordnung = einordnen(eintrag.east_share);
+    const mitMesswerten = eintrag.actual_share > 0;
+    return {
+      zustand: einordnung.richtung,
+      text: `${einordnung.klasse}, Ostbetrieb ${prozentText(eintrag.east_share)}${mitMesswerten ? `, ${texte.gemischt}` : ""}`,
+      haupt: prozentText(eintrag.east_share),
+      neben: mitMesswerten ? texte.gemischt : `${texte.prognose}: ${einordnung.klasse}`,
+      ostAnteil: eintrag.east_share,
+      gemischt: mitMesswerten,
+      prognose: !mitMesswerten,
     };
   }
   if (eintrag.status === "gap" || eintrag.runway_direction === null) {

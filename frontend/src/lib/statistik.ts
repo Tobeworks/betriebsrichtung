@@ -35,7 +35,7 @@ interface Wahrheit {
 function wahrheiten(eintraege: Eintrag[]): Wahrheit[] {
   return eintraege
     .flatMap((e): Wahrheit[] => {
-      if (e.status === "forecast" || e.status === "gap") {
+      if (e.status === "forecast" || e.status === "running" || e.status === "gap") {
         return [];
       }
       const ost = e.east_share ?? (e.runway_direction === null ? null : e.runway_direction === "east" ? 1 : 0);

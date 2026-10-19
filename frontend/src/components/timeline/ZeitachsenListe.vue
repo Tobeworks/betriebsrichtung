@@ -29,6 +29,8 @@ const flaeche: Record<Zustand, string> = {
 const verlauf = "bg-[color-mix(in_oklch,var(--color-east)_var(--ost-anteil),var(--color-west))] text-foreground";
 // Gestrichelter Rand trennt eine Prognose von der aus Messwind geschätzten Wahrheit.
 const gestrichelt = "border-[0.0625rem] border-dashed border-foreground/50";
+// Gepunkteter Rand: laufendes Fenster aus gemessenem und prognostiziertem Teil.
+const gepunktet = "border-[0.0625rem] border-dotted border-foreground/60";
 
 function feld(
   eintrag?: Eintrag,
@@ -41,7 +43,7 @@ function feld(
     haupt: beschreibung.haupt,
     neben: beschreibung.neben,
     ost: anteil !== undefined,
-    klasse: (anteil === undefined ? flaeche[beschreibung.zustand] : verlauf) + (beschreibung.prognose ? " " + gestrichelt : ""),
+    klasse: (anteil === undefined ? flaeche[beschreibung.zustand] : verlauf) + (beschreibung.prognose ? " " + gestrichelt : beschreibung.gemischt ? " " + gepunktet : ""),
     stil: anteil === undefined ? undefined : { "--ost-anteil": `${Math.round(anteil * 100)}%` },
   };
 }

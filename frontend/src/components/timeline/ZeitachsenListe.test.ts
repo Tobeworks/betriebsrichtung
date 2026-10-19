@@ -12,6 +12,11 @@ function prognose(datum: string): Eintrag {
   };
 }
 
+// Ein Tag in der Zukunft, damit die Tests nicht mit dem Kalender altern (frühere Tage sind in der Liste ausgeblendet).
+function morgen(): string {
+  return lokalesDatum(new Date(Date.now() + 86400000));
+}
+
 describe("ZeitachsenListe", () => {
   it("markiert nur die Zeilen des heutigen Tages", () => {
     const jetzt = new Date();
@@ -26,14 +31,14 @@ describe("ZeitachsenListe", () => {
   });
 
   it("färbt Prognosen nach Ostwahrscheinlichkeit, auch bei 50 %", () => {
-    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [{ ...prognose("2026-10-18"), p_east: 0.5 }] } });
+    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [{ ...prognose(morgen()), p_east: 0.5 }] } });
     const feld = wrapper.findAll("ul ul > li")[1].find("div");
     expect(feld.attributes("style")).toContain("--ost-anteil: 50%");
     expect(feld.classes().join(" ")).not.toContain("bg-muted");
   });
 
   it("fasst die Fenster eines Tages zu einer Karte zusammen und zeigt fehlende als keine Daten", () => {
-    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [prognose("2026-10-18")] } });
+    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [prognose(morgen())] } });
     const karte = wrapper.find('ul[aria-label="Zeitachse"] > li');
     expect(karte.findAll("ul > li")).toHaveLength(3);
     expect(karte.text()).toContain("Vormittag");
@@ -70,4 +75,19 @@ describe("ZeitachsenListe", () => {
     expect(prognoseZelle?.classes().join(" ")).toContain("border-dashed");
     expect(geschaetztZelle?.classes().join(" ")).not.toContain("border-dashed");
   });
+
+  it("zeigt das laufende Fenster als Mischung mit gepunktetem Rand", () => {
+    const jetzt = Date.now();
+    const laufend: Eintrag = {
+      status: "running", local_date: lokalesDatum(new Date()), slot: "morning",
+      start: new Date(jetzt - 3600000).toISOString(), end: new Date(jetzt + 3600000).toISOString(), east_share: 0.9,
+      actual_share: 0.5, east_actual: 1, p_east_rest: 0.8, known_until: new Date(jetzt).toISOString(), latest_direction: "east",
+    };
+    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [laufend] } });
+    expect(wrapper.text()).toContain("Vormittag, läuft");
+    expect(wrapper.text()).toContain("bisher geschätzt, Rest Prognose");
+    const zelle = wrapper.findAll("ul ul > li > div").find((z) => z.text().includes("bisher geschätzt"));
+    expect(zelle?.classes().join(" ")).toContain("border-dotted");
+  });
 });
+

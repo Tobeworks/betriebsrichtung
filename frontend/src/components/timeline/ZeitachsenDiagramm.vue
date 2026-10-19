@@ -88,14 +88,16 @@ const hinweis = computed(() => {
           shape-rendering="crispEdges"
         >
           <g v-for="s in spalten" :key="s.von">
-            <rect :class="['fill-west', s.eintrag.status === 'forecast' ? 'opacity-60' : '']" :x="prozent(s.von)" y="0" :width="prozent(s.bis) - prozent(s.von)" :height="HOEHE * (1 - s.ost)" />
-            <rect
-              :class="['fill-east', s.eintrag.status === 'forecast' ? 'opacity-60' : '']"
-              :x="prozent(s.von)"
-              :y="HOEHE * (1 - s.ost)"
-              :width="prozent(s.bis) - prozent(s.von)"
-              :height="HOEHE * s.ost"
-            />
+            <template v-for="(teil, i) in s.segmente" :key="i">
+              <rect :class="['fill-west', teil.blass ? 'opacity-60' : '']" :x="prozent(teil.von)" y="0" :width="prozent(teil.bis) - prozent(teil.von)" :height="HOEHE * (1 - teil.ost)" />
+              <rect
+                :class="['fill-east', teil.blass ? 'opacity-60' : '']"
+                :x="prozent(teil.von)"
+                :y="HOEHE * (1 - teil.ost)"
+                :width="prozent(teil.bis) - prozent(teil.von)"
+                :height="HOEHE * teil.ost"
+              />
+            </template>
           </g>
         </svg>
         <div

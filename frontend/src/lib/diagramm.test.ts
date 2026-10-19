@@ -10,6 +10,26 @@ const beobachtet = { ...basis, start: "2026-10-17T04:00:00.000Z", end: "2026-10-
   east_share: null, source: "umwelthaus" as const };
 const luecke = { ...beobachtet, status: "gap" as const, runway_direction: null };
 
+describe("saeulen mit laufendem Fenster", () => {
+  const laufend = {
+    status: "running", local_date: "2026-10-18", slot: "morning", start: "2026-10-18T04:00:00.000Z",
+    end: "2026-10-18T12:00:00.000Z", east_share: 0.7, actual_share: 0.25, east_actual: 1, p_east_rest: 0.6,
+    known_until: "2026-10-18T06:00:00.000Z", latest_direction: "east",
+  } satisfies Eintrag;
+
+  it("teilt die Säule am bekannten Teil in kräftig (Messwind) und blass (Prognose)", () => {
+    const [s] = saeulen([laufend], "2026-10-18", "2026-10-18");
+    expect(s.segmente.map((t) => [t.ost, t.blass])).toEqual([[1, false], [0.6, true]]);
+    expect(s.segmente[0].bis).toBe(Date.parse("2026-10-18T06:00:00.000Z"));
+    expect(s.segmente[1].von).toBe(Date.parse("2026-10-18T06:00:00.000Z"));
+  });
+
+  it("zeigt ohne bekannten Teil nur das blasse Segment", () => {
+    const [s] = saeulen([{ ...laufend, actual_share: 0, east_actual: null }], "2026-10-18", "2026-10-18");
+    expect(s.segmente.map((t) => t.blass)).toEqual([true]);
+  });
+});
+
 describe("diagramm", () => {
   it("leitet den Ostanteil aus Prognose, Beobachtung und Lücke ab", () => {
     expect(ostAnteil(prognose)).toBe(0.3);
