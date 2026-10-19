@@ -32,13 +32,18 @@ interface Wahrheit {
   geschaetzt: boolean;
 }
 
+// Ostanteil der Wahrheit eines Fensters (beobachtet oder aus Messwind geschätzt), null für Prognose, laufendes Fenster und Lücke.
+export function wahrheitsAnteil(e: Eintrag): number | null {
+  if (e.status === "forecast" || e.status === "running" || e.status === "gap") {
+    return null;
+  }
+  return e.east_share ?? (e.runway_direction === null ? null : e.runway_direction === "east" ? 1 : 0);
+}
+
 function wahrheiten(eintraege: Eintrag[]): Wahrheit[] {
   return eintraege
     .flatMap((e): Wahrheit[] => {
-      if (e.status === "forecast" || e.status === "running" || e.status === "gap") {
-        return [];
-      }
-      const ost = e.east_share ?? (e.runway_direction === null ? null : e.runway_direction === "east" ? 1 : 0);
+      const ost = wahrheitsAnteil(e);
       return ost === null
         ? []
         : [{ start: Date.parse(e.start), ende: Date.parse(e.end), datum: e.local_date, slot: e.slot, ost, geschaetzt: e.status === "estimated" }];

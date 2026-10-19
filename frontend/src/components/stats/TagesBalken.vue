@@ -13,14 +13,20 @@ const schritt = computed(() => Math.ceil(props.tage.length / 8));
 </script>
 
 <template>
-  <figure class="flex flex-col gap-2">
-    <figcaption class="heading-section">{{ texte.statistik.verlauf }}</figcaption>
+  <figure class="hairline flex flex-col gap-3 border-x-0 border-b-0 pt-6">
+    <figcaption class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+      <span class="heading-section">{{ texte.statistik.verlauf }}</span>
+      <span class="flex gap-4 text-fine">
+        <span class="inline-flex items-center gap-1.5"><span class="size-3 rounded-sm bg-west" aria-hidden="true" />{{ texte.west }}</span>
+        <span class="inline-flex items-center gap-1.5"><span class="size-3 rounded-sm bg-east" aria-hidden="true" />{{ texte.ost }}</span>
+      </span>
+    </figcaption>
     <svg
       :viewBox="`0 0 100 ${HOEHE}`"
       preserveAspectRatio="none"
       role="img"
       :aria-label="texte.statistik.verlauf"
-      class="block h-40 w-full rounded-md bg-muted motion-safe:animate-aufbau"
+      class="block h-32 w-full rounded-md bg-muted motion-safe:animate-aufbau sm:h-40"
       shape-rendering="crispEdges"
     >
       <g v-for="(tag, i) in tage" :key="tag.datum">

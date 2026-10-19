@@ -1,5 +1,6 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { lokalesDatum } from "../lib/format";
 import StatsPage from "./StatsPage.vue";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -23,9 +24,9 @@ describe("StatsPage", () => {
     await flushPromises();
     expect(wrapper.text()).toContain("Ostanteil");
     expect(wrapper.text()).toContain("50\u00a0%");
-    expect(wrapper.text()).toContain("0 / 1");
+    expect(wrapper.text()).toContain("0\u00a0/\u00a01");
     expect(wrapper.find("svg").exists()).toBe(true);
-    expect(wrapper.text()).toContain("Datenbasis: 2 Fenster (17.10. bis 17.10.)");
+    expect(wrapper.text()).toContain("Datenbasis: 17.10. bis 17.10., 2 Fenster");
     expect(wrapper.text()).toContain("aus gemessenem Wind");
   });
 
@@ -42,6 +43,26 @@ describe("StatsPage", () => {
     const wrapper = mount(StatsPage);
     await flushPromises();
     expect(wrapper.find('[role="alert"]').text()).toContain("Verbindung");
-    expect(wrapper.find("button").text()).toContain("Erneut versuchen");
+    expect(wrapper.findAll("button").map((b) => b.text())).toContain("Erneut versuchen");
+  });
+
+  it("lädt mit der Zeitraum-Auswahl neu und zeigt die Historie", async () => {
+    const gestern = lokalesDatum(new Date(Date.now() - 86400000));
+    const items = [{ ...fenster("morning", `${gestern}T04:00:00.000Z`, `${gestern}T12:00:00.000Z`, 1), local_date: gestern }];
+    const abruf = vi.fn(async () => new Response(JSON.stringify(antwort(items)), { status: 200 }));
+    vi.stubGlobal("fetch", abruf);
+    const wrapper = mount(StatsPage);
+    await flushPromises();
+    expect(wrapper.text()).toContain("Historie");
+    expect(wrapper.find("table").text()).toContain("Ost 100\u00a0%");
+    const ersterAufruf = String((abruf.mock.calls[0] as unknown[])[0]);
+    expect(ersterAufruf).toContain(`from=${lokalesDatum(new Date(Date.now() - 30 * 86400000))}`);
+
+    await wrapper.findAll("button").find((b) => b.text() === "90 Tage")!.trigger("click");
+    await flushPromises();
+    expect(abruf).toHaveBeenCalledTimes(2);
+    const zweiterAufruf = String((abruf.mock.calls[1] as unknown[])[0]);
+    expect(zweiterAufruf).toContain(`from=${lokalesDatum(new Date(Date.now() - 90 * 86400000))}`);
   });
 });
+
