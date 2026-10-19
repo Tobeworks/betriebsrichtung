@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { einordnen, prozentText } from "./probability";
+import { einordnen, prozentText, teilung } from "./probability";
 
 describe("prozentText", () => {
   it("rundet auf 5 Prozentpunkte und nutzt geschützte Leerzeichen", () => {
@@ -27,3 +27,18 @@ describe("einordnen", () => {
     expect(ergebnis.richtung).toBe(richtung);
   });
 });
+
+describe("teilung", () => {
+  it("teilt in Ost und West auf 5 Prozentpunkte gerundet, zusammen immer 100", () => {
+    expect(teilung(0.4)).toEqual({ ost: "40\u00a0%", west: "60\u00a0%", dominant: "west" });
+    expect(teilung(0.62)).toEqual({ ost: "60\u00a0%", west: "40\u00a0%", dominant: "ost" });
+    expect(teilung(0.225)).toEqual({ ost: "25\u00a0%", west: "75\u00a0%", dominant: "west" });
+  });
+
+  it("nennt keine dominante Richtung bei 50 zu 50 und zeigt Randwerte als unter 5 und über 95", () => {
+    expect(teilung(0.5).dominant).toBeNull();
+    expect(teilung(0.02)).toEqual({ ost: "<5\u00a0%", west: ">95\u00a0%", dominant: "west" });
+    expect(teilung(0.98)).toEqual({ ost: ">95\u00a0%", west: "<5\u00a0%", dominant: "ost" });
+  });
+});
+

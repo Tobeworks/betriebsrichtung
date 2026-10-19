@@ -12,8 +12,9 @@ describe("beschreibeEintrag", () => {
 
   it("beschreibt eine Prognose mit Einordnung und Prozentwert", () => {
     expect(beschreibeEintrag(prognose)).toMatchObject({
-      haupt: "60\u00a0%",
-      neben: "Prognose: tendenziell Ost",
+      aussage: "tendenziell Ost",
+      herkunft: "Prognose",
+      teilung: { ost: "60\u00a0%", west: "40\u00a0%", dominant: "ost" },
       prognose: true,
       zustand: "ost",
       text: "tendenziell Ost, Ostbetrieb 60 %",
@@ -48,11 +49,12 @@ describe("beschreibeEintrag", () => {
     } satisfies Eintrag;
     expect(beschreibeEintrag(geschaetzt)).toMatchObject({
       zustand: "offen",
-      haupt: "50\u00a0%",
-      neben: "geschätzt: offen",
+      aussage: "offen",
+      herkunft: "Schätzung",
+      teilung: { ost: "50\u00a0%", west: "50\u00a0%", dominant: null },
       ostAnteil: 0.5,
     });
-    expect(beschreibeEintrag({ ...geschaetzt, east_share: null })).toMatchObject({ zustand: "ost", text: "Ost, geschätzt" });
+    expect(beschreibeEintrag({ ...geschaetzt, east_share: null })).toMatchObject({ zustand: "ost", text: "Ost, Schätzung" });
   });
 });
 
@@ -73,13 +75,13 @@ describe("beschreibeEintrag laufendes Fenster", () => {
 
   it("zeigt die Mischung aus bekanntem Teil und Prognose", () => {
     expect(beschreibeEintrag(laufendEintrag)).toMatchObject({
-      zustand: "ost", haupt: "über 95\u00a0%", neben: "bisher geschätzt, Rest Prognose", ostAnteil: 0.97, gemischt: true,
+      zustand: "ost", aussage: "Ost", herkunft: "Schätzung + Prognose", ostAnteil: 0.97, gemischt: true,
     });
   });
 
   it("ist ohne bekannten Teil reine Prognose", () => {
     const ohne = { ...laufendEintrag, actual_share: 0, east_actual: null, latest_direction: null };
-    expect(beschreibeEintrag(ohne)).toMatchObject({ prognose: true, gemischt: false, neben: "Prognose: Ost" });
+    expect(beschreibeEintrag(ohne)).toMatchObject({ prognose: true, gemischt: false, aussage: "Ost", herkunft: "Prognose" });
   });
 });
 

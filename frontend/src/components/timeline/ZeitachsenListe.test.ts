@@ -67,11 +67,12 @@ describe("ZeitachsenListe", () => {
     const wrapper = mount(ZeitachsenListe, { props: { eintraege: [geschaetzt, prognose(lokalesDatum(new Date(jetzt + 86400000)))] } });
     const text = wrapper.text();
     expect(text).toContain("Nachmittag, läuft");
-    expect(text).toContain("geschätzt: Ost");
-    expect(text).toContain("Prognose: offen");
+    expect(text).toContain("Schätzung");
+    expect(text).toContain("Prognose");
+    expect(text).toContain("offen");
     const zellen = wrapper.findAll("ul ul > li > div");
-    const geschaetztZelle = zellen.find((z) => z.text().includes("geschätzt:"));
-    const prognoseZelle = zellen.find((z) => z.text().includes("Prognose:"));
+    const geschaetztZelle = zellen.find((z) => z.text().includes("Schätzung"));
+    const prognoseZelle = zellen.find((z) => z.text().includes("Prognose"));
     expect(prognoseZelle?.classes().join(" ")).toContain("border-dashed");
     expect(geschaetztZelle?.classes().join(" ")).not.toContain("border-dashed");
   });
@@ -85,9 +86,22 @@ describe("ZeitachsenListe", () => {
     };
     const wrapper = mount(ZeitachsenListe, { props: { eintraege: [laufend] } });
     expect(wrapper.text()).toContain("Vormittag, läuft");
-    expect(wrapper.text()).toContain("bisher geschätzt, Rest Prognose");
-    const zelle = wrapper.findAll("ul ul > li > div").find((z) => z.text().includes("bisher geschätzt"));
+    expect(wrapper.text()).toContain("Schätzung + Prognose");
+    const zelle = wrapper.findAll("ul ul > li > div").find((z) => z.text().includes("Schätzung + Prognose"));
     expect(zelle?.classes().join(" ")).toContain("border-dotted");
+  });
+
+  it("zeigt oben die Gesamtaussage und unten Ost und West, die stärkere Richtung fett und die andere hell", () => {
+    const wrapper = mount(ZeitachsenListe, { props: { eintraege: [{ ...prognose(morgen()), p_east: 0.35 }] } });
+    const zelle = wrapper.findAll("ul ul > li > div")[1];
+    expect(zelle.text()).toContain("tendenziell West");
+    const blaetter = zelle.findAll("span").filter((s) => s.findAll("span").length === 0);
+    const ost = blaetter.find((s) => s.text().startsWith("Ost"));
+    const west = blaetter.find((s) => s.text().startsWith("West"));
+    expect(ost?.text()).toBe("Ost 35\u00a0%");
+    expect(west?.text()).toBe("West 65\u00a0%");
+    expect(west?.classes()).toContain("font-bold");
+    expect(ost?.classes()).toContain("font-light");
   });
 });
 

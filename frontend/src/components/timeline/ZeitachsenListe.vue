@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { type Beschreibung, beschreibeEintrag, type Eintrag, nachTagen, slotName, type Zustand } from "../../lib/zeitachse";
 import { formatDatum, lokalesDatum } from "../../lib/format";
+import type { Teilung } from "../../lib/probability";
 import { texte } from "../../config/texte";
 
 const props = defineProps<{ eintraege: Eintrag[] }>();
@@ -32,17 +33,29 @@ const gestrichelt = "border-[0.0625rem] border-dashed border-foreground/50";
 // Gepunkteter Rand: laufendes Fenster aus gemessenem und prognostiziertem Teil.
 const gepunktet = "border-[0.0625rem] border-dotted border-foreground/60";
 
-function feld(
-  eintrag?: Eintrag,
-): { haupt: string; neben: string; ost: boolean; klasse: string; stil?: Record<string, string> } {
+// Die Richtung mit dem größeren Gewicht ist fett, die andere hell. Bei 50 zu 50 sind beide gleich.
+function gewicht(teilung: Teilung, richtung: "ost" | "west"): string {
+  if (teilung.dominant === null) {
+    return "font-medium";
+  }
+  return teilung.dominant === richtung ? "font-bold" : "font-light opacity-70";
+}
+
+function feld(eintrag?: Eintrag): {
+  aussage: string;
+  herkunft: string;
+  teilung?: Teilung;
+  klasse: string;
+  stil?: Record<string, string>;
+} {
   const beschreibung: Beschreibung = eintrag
     ? beschreibeEintrag(eintrag)
-    : { zustand: "luecke", text: texte.keineDaten, haupt: "–", neben: texte.keineDaten };
+    : { zustand: "luecke", text: texte.keineDaten, aussage: "–", herkunft: texte.keineDaten };
   const anteil = beschreibung.ostAnteil;
   return {
-    haupt: beschreibung.haupt,
-    neben: beschreibung.neben,
-    ost: anteil !== undefined,
+    aussage: beschreibung.aussage,
+    herkunft: beschreibung.herkunft,
+    teilung: beschreibung.teilung,
     klasse: (anteil === undefined ? flaeche[beschreibung.zustand] : verlauf) + (beschreibung.prognose ? " " + gestrichelt : beschreibung.gemischt ? " " + gepunktet : ""),
     stil: anteil === undefined ? undefined : { "--ost-anteil": `${Math.round(anteil * 100)}%` },
   };
@@ -82,12 +95,14 @@ function feld(
             </span>
             <div
               :style="feld(tag.slots[slot]).stil"
-              :class="['flex min-h-[4.5rem] flex-1 flex-col justify-center rounded-md px-2 py-2 leading-tight', feld(tag.slots[slot]).klasse]"
+              :class="['flex min-h-[5.5rem] flex-1 flex-col justify-center gap-0.5 rounded-md px-2 py-2 leading-tight', feld(tag.slots[slot]).klasse]"
             >
-              <span class="whitespace-nowrap text-base font-semibold">
-                <span v-if="feld(tag.slots[slot]).ost" class="sr-only">{{ texte.ostbetrieb }}: </span>{{ feld(tag.slots[slot]).haupt }}
+              <span class="text-xs opacity-80">{{ feld(tag.slots[slot]).herkunft }}</span>
+              <span class="text-base font-semibold">{{ feld(tag.slots[slot]).aussage }}</span>
+              <span v-if="feld(tag.slots[slot]).teilung" class="flex flex-wrap gap-x-2 whitespace-nowrap text-xs">
+                <span :class="gewicht(feld(tag.slots[slot]).teilung!, 'ost')">{{ texte.ost }} {{ feld(tag.slots[slot]).teilung!.ost }}</span>
+                <span :class="gewicht(feld(tag.slots[slot]).teilung!, 'west')">{{ texte.west }} {{ feld(tag.slots[slot]).teilung!.west }}</span>
               </span>
-              <span class="text-xs">{{ feld(tag.slots[slot]).neben }}</span>
             </div>
           </li>
         </ul>

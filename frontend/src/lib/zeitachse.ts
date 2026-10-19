@@ -1,6 +1,6 @@
 import type { AntwortZeitachse } from "../api/generated/timeline.response";
 import { texte } from "../config/texte";
-import { einordnen, prozentText, type Richtung } from "./probability";
+import { einordnen, prozentText, type Richtung, type Teilung, teilung } from "./probability";
 
 export type Eintrag = AntwortZeitachse["items"][number];
 
@@ -9,8 +9,9 @@ export type Zustand = Richtung | "luecke";
 export interface Beschreibung {
   zustand: Zustand;
   text: string;
-  haupt: string;
-  neben: string;
+  aussage: string;
+  herkunft: string;
+  teilung?: Teilung;
   ostAnteil?: number;
   prognose?: boolean;
   gemischt?: boolean;
@@ -32,8 +33,9 @@ export function beschreibeEintrag(eintrag: Eintrag): Beschreibung {
     return {
       zustand: einordnung.richtung,
       text: `${einordnung.klasse}, Ostbetrieb ${prozentText(eintrag.p_east)}`,
-      haupt: prozentText(eintrag.p_east),
-      neben: `${texte.prognose}: ${einordnung.klasse}`,
+      aussage: einordnung.klasse,
+      herkunft: texte.prognose,
+      teilung: teilung(eintrag.p_east),
       ostAnteil: eintrag.p_east,
       prognose: true,
     };
@@ -44,8 +46,9 @@ export function beschreibeEintrag(eintrag: Eintrag): Beschreibung {
     return {
       zustand: einordnung.richtung,
       text: `${texte.geschaetzt}, Ostbetrieb ${prozentText(eintrag.east_share)}`,
-      haupt: prozentText(eintrag.east_share),
-      neben: `${texte.geschaetzt}: ${einordnung.klasse}`,
+      aussage: einordnung.klasse,
+      herkunft: texte.geschaetzt,
+      teilung: teilung(eintrag.east_share),
       ostAnteil: eintrag.east_share,
     };
   }
@@ -56,23 +59,24 @@ export function beschreibeEintrag(eintrag: Eintrag): Beschreibung {
     return {
       zustand: einordnung.richtung,
       text: `${einordnung.klasse}, Ostbetrieb ${prozentText(eintrag.east_share)}${mitMesswerten ? `, ${texte.gemischt}` : ""}`,
-      haupt: prozentText(eintrag.east_share),
-      neben: mitMesswerten ? texte.gemischt : `${texte.prognose}: ${einordnung.klasse}`,
+      aussage: einordnung.klasse,
+      herkunft: mitMesswerten ? texte.gemischt : texte.prognose,
+      teilung: teilung(eintrag.east_share),
       ostAnteil: eintrag.east_share,
       gemischt: mitMesswerten,
       prognose: !mitMesswerten,
     };
   }
   if (eintrag.status === "gap" || eintrag.runway_direction === null) {
-    return { zustand: "luecke", text: texte.keineDaten, haupt: "–", neben: texte.keineDaten };
+    return { zustand: "luecke", text: texte.keineDaten, aussage: "–", herkunft: texte.keineDaten };
   }
   const richtung = eintrag.runway_direction === "east" ? texte.ost : texte.west;
   const herkunft = eintrag.status === "estimated" ? texte.geschaetzt : texte.beobachtet;
   return {
     zustand: eintrag.runway_direction === "east" ? "ost" : "west",
     text: `${richtung}, ${herkunft}`,
-    haupt: richtung,
-    neben: herkunft,
+    aussage: richtung,
+    herkunft,
   };
 }
 
