@@ -27,8 +27,11 @@ export const texte = {
   jetzt: "Jetzt",
   laeuft: "läuft",
   aktuell: "Aktuell",
-  startOst: "Start und Landung nach Osten",
-  startWest: "Start und Landung nach Westen",
+  // Die Betriebsrichtung meint die Flugrichtung auf der Bahn: Starts fliegen in diese Richtung ab, Landungen kommen von der Gegenseite an.
+  startOst: "Starts nach Osten",
+  landungOst: "Landungen aus Westen",
+  startWest: "Starts nach Westen",
+  landungWest: "Landungen aus Osten",
   herkunftGeschaetzt: "Schätzung aus Messwind",
   keineAktuellenDaten: "Keine aktuellen Daten",
   fruehereAnzeigen: "Frühere Tage anzeigen",

@@ -13,7 +13,13 @@ const fuellung = computed(() =>
   richtung.value === "ost" ? "var(--color-east)" : richtung.value === "west" ? "var(--color-west)" : "var(--color-muted)",
 );
 const titel = computed(() => (richtung.value === "ost" ? texte.ostbetrieb : richtung.value === "west" ? texte.westbetrieb : texte.keineAktuellenDaten));
-const untertitel = computed(() => (richtung.value === "ost" ? texte.startOst : richtung.value === "west" ? texte.startWest : ""));
+const zeilen = computed(() =>
+  richtung.value === "ost"
+    ? [texte.startOst, texte.landungOst]
+    : richtung.value === "west"
+      ? [texte.startWest, texte.landungWest]
+      : [],
+);
 const herkunft = computed(() => {
   const h = aktuell.value.herkunft;
   return h === "geschaetzt" ? texte.herkunftGeschaetzt : h === "beobachtet" ? texte.beobachtet : h === "prognose" ? texte.prognose : "";
@@ -34,7 +40,7 @@ const herkunft = computed(() => {
     <div class="flex min-w-0 flex-col gap-1">
       <p class="text-fine">{{ texte.aktuell }}</p>
       <h2 id="aktuell-titel" class="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{{ titel }}</h2>
-      <p v-if="untertitel" class="text-foreground">{{ untertitel }}</p>
+      <p v-for="zeile in zeilen" :key="zeile" class="leading-snug text-foreground">{{ zeile }}</p>
       <p v-if="herkunft" class="text-fine">{{ herkunft }}</p>
     </div>
   </section>
