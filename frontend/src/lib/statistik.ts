@@ -16,7 +16,8 @@ export interface Statistik {
   fenster: number;
   ostanteil: number | null;
   tageMitOst: number;
-  laengstePhaseStunden: number;
+  laengsteOstphaseStunden: number;
+  laengsteWestphaseStunden: number;
   profil: Record<Eintrag["slot"], Profil | null>;
   von: string | null;
   bis: string | null;
@@ -57,6 +58,20 @@ function gewichtet(liste: Wahrheit[]): number {
   return liste.reduce((summe, w) => summe + w.ost * (w.ende - w.start), 0) / dauer;
 }
 
+// Längste lückenlose Folge von Fenstern, für die zaehlt zutrifft, in Stunden. Eine Lücke oder ein Fenster der anderen Richtung beendet sie.
+function laengstePhase(liste: Wahrheit[], zaehlt: (ost: number) => boolean): number {
+  let phase = 0;
+  let laengste = 0;
+  let vorher: Wahrheit | null = null;
+  for (const w of liste) {
+    const anschluss = vorher !== null && Math.abs(w.start - vorher.ende) < 60000;
+    phase = zaehlt(w.ost) ? (anschluss && phase > 0 ? phase : 0) + (w.ende - w.start) : 0;
+    laengste = Math.max(laengste, phase);
+    vorher = w;
+  }
+  return Math.round(laengste / 3600000);
+}
+
 export function statistik(eintraege: Eintrag[]): Statistik {
   const liste = wahrheiten(eintraege);
   const nachTag = new Map<string, Wahrheit[]>();
@@ -66,16 +81,6 @@ export function statistik(eintraege: Eintrag[]): Statistik {
   const tage = [...nachTag]
     .map(([datum, ws]) => ({ datum, ost: gewichtet(ws), fenster: ws.length }))
     .sort((a, b) => a.datum.localeCompare(b.datum));
-
-  let phase = 0;
-  let laengste = 0;
-  let vorher: Wahrheit | null = null;
-  for (const w of liste) {
-    const anschluss = vorher !== null && Math.abs(w.start - vorher.ende) < 60000;
-    phase = w.ost > 0.5 ? (anschluss && phase > 0 ? phase : 0) + (w.ende - w.start) : 0;
-    laengste = Math.max(laengste, phase);
-    vorher = w;
-  }
 
   const profil = (slot: Eintrag["slot"]): Profil | null => {
     const ws = liste.filter((w) => w.slot === slot);
@@ -87,7 +92,8 @@ export function statistik(eintraege: Eintrag[]): Statistik {
     fenster: liste.length,
     ostanteil: liste.length === 0 ? null : gewichtet(liste),
     tageMitOst: tage.filter((t) => t.ost > 0.5).length,
-    laengstePhaseStunden: Math.round(laengste / 3600000),
+    laengsteOstphaseStunden: laengstePhase(liste, (ost) => ost > 0.5),
+    laengsteWestphaseStunden: laengstePhase(liste, (ost) => ost < 0.5),
     profil: { morning: profil("morning"), afternoon: profil("afternoon"), night: profil("night") },
     von: tage[0]?.datum ?? null,
     bis: tage[tage.length - 1]?.datum ?? null,

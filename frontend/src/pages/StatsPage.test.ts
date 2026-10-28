@@ -25,6 +25,8 @@ describe("StatsPage", () => {
     expect(wrapper.text()).toContain("Ostanteil");
     expect(wrapper.text()).toContain("50\u00a0%");
     expect(wrapper.text()).toContain("0\u00a0/\u00a01");
+    expect(wrapper.text()).toContain("Längste Ostphase");
+    expect(wrapper.text()).toContain("Längste Westphase");
     expect(wrapper.find("svg").exists()).toBe(true);
     expect(wrapper.text()).toContain("Datenbasis: 17.10. bis 17.10., 2 Fenster");
     expect(wrapper.text()).toContain("aus gemessenem Wind");

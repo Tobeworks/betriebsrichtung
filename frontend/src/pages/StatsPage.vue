@@ -69,18 +69,22 @@ const slots = ["morning", "afternoon", "night"] as const;
     <p v-else-if="!s || s.fenster === 0" class="text-fine">{{ texte.statistik.leer }}</p>
 
     <template v-else>
-      <dl class="grid grid-cols-3 gap-2 sm:gap-3">
+      <dl class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         <div class="flex flex-col gap-1 rounded-lg border-[0.0625rem] border-border bg-surface p-3 sm:p-4">
           <dt class="text-xs leading-tight text-muted-foreground sm:text-sm">{{ texte.statistik.ostanteil }}</dt>
-          <dd class="text-xl font-semibold leading-tight text-foreground sm:text-3xl">{{ ganzProzent(s.ostanteil ?? 0) }}</dd>
+          <dd class="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{{ ganzProzent(s.ostanteil ?? 0) }}</dd>
         </div>
         <div class="flex flex-col gap-1 rounded-lg border-[0.0625rem] border-border bg-surface p-3 sm:p-4">
           <dt class="text-xs leading-tight text-muted-foreground sm:text-sm">{{ texte.statistik.tageMitOst }}</dt>
-          <dd class="text-xl font-semibold leading-tight text-foreground sm:text-3xl">{{ s.tageMitOst }}&nbsp;/&nbsp;{{ s.tage.length }}</dd>
+          <dd class="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{{ s.tageMitOst }}&nbsp;/&nbsp;{{ s.tage.length }}</dd>
         </div>
         <div class="flex flex-col gap-1 rounded-lg border-[0.0625rem] border-border bg-surface p-3 sm:p-4">
-          <dt class="text-xs leading-tight text-muted-foreground sm:text-sm">{{ texte.statistik.laengstePhase }}</dt>
-          <dd class="text-xl font-semibold leading-tight text-foreground sm:text-3xl">{{ formatDauerKurz(s.laengstePhaseStunden) }}</dd>
+          <dt class="text-xs leading-tight text-muted-foreground sm:text-sm">{{ texte.statistik.laengsteOstphase }}</dt>
+          <dd class="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{{ formatDauerKurz(s.laengsteOstphaseStunden) }}</dd>
+        </div>
+        <div class="flex flex-col gap-1 rounded-lg border-[0.0625rem] border-border bg-surface p-3 sm:p-4">
+          <dt class="text-xs leading-tight text-muted-foreground sm:text-sm">{{ texte.statistik.laengsteWestphase }}</dt>
+          <dd class="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{{ formatDauerKurz(s.laengsteWestphaseStunden) }}</dd>
         </div>
       </dl>
 

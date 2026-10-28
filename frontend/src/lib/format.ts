@@ -56,7 +56,11 @@ export function formatDauer(stunden: number): string {
 
 // Kurz für schmale Karten: bis 72 Stunden in Stunden, darüber in Tagen.
 export function formatDauerKurz(stunden: number): string {
-  return stunden < 72 ? `${stunden}\u00a0Std.` : `${Math.round(stunden / 24)}\u00a0Tage`;
+  if (stunden < 72) {
+    return `${stunden}\u00a0Std.`;
+  }
+  const tage = Math.round((stunden / 24) * 10) / 10;
+  return `${String(tage).replace(".", ",")}\u00a0Tage`;
 }
 
 export function formatTagMonat(lokalesDatum: string): string {

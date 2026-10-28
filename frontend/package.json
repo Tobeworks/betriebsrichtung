@@ -1,7 +1,7 @@
 {
   "name": "betriebsrichtung-frontend",
   "private": true,
-  "version": "2.2.5",
+  "version": "2.2.6",
   "type": "module",
   "packageManager": "pnpm@11.28.3",
   "scripts": {

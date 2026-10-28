@@ -34,7 +34,10 @@ describe("statistik", () => {
 
   it("findet die längste zusammenhängende Ostphase in Stunden", () => {
     // Nachmittag, Nacht und Vormittag am Stück: 8 + 8 + 8 Stunden
-    expect(statistik([...tag1, ...tag2]).laengstePhaseStunden).toBe(24);
+    const s = statistik([...tag1, ...tag2]);
+    expect(s.laengsteOstphaseStunden).toBe(24);
+    // Westfenster sind der Vormittag am 16. und der Nachmittag am 17., dazwischen liegt Ost: zwei getrennte Phasen
+    expect(s.laengsteWestphaseStunden).toBe(8);
   });
 
   it("ignoriert Lücken und Prognosen und liefert ohne Daten leere Werte", () => {
@@ -53,4 +56,23 @@ describe("statistik", () => {
     expect(s.tage).toEqual([]);
     expect(s.profil.morning).toBeNull();
   });
+
+  it("findet die längste Westphase über mehrere zusammenhängende Fenster und bricht sie an einer Lücke ab", () => {
+    const west = [
+      fenster("2026-10-14", "morning", "2026-10-14T04:00", "2026-10-14T12:00", 0),
+      fenster("2026-10-14", "afternoon", "2026-10-14T12:00", "2026-10-14T20:00", 0.25),
+      fenster("2026-10-14", "night", "2026-10-14T20:00", "2026-10-15T04:00", 0),
+      // Lücke: das Fenster am 15. vormittags fehlt
+      fenster("2026-10-15", "afternoon", "2026-10-15T12:00", "2026-10-15T20:00", 0),
+    ];
+    const s = statistik(west);
+    expect(s.laengsteWestphaseStunden).toBe(24);
+    expect(s.laengsteOstphaseStunden).toBe(0);
+  });
+
+  it("zählt ein Fenster mit genau 50 Prozent weder als Ost noch als West", () => {
+    const s = statistik([fenster("2026-10-14", "morning", "2026-10-14T04:00", "2026-10-14T12:00", 0.5)]);
+    expect([s.laengsteOstphaseStunden, s.laengsteWestphaseStunden]).toEqual([0, 0]);
+  });
 });
+
