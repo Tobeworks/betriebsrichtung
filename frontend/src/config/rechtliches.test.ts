@@ -10,6 +10,14 @@ describe("rechtliche Seiten", () => {
     expect(text).toContain("hallo@tobeworks.de");
   });
 
+  it("nennen im Impressum und in der Datenschutzerklärung dieselbe aktuelle Anschrift", () => {
+    const anbieter = impressum.find((abschnitt) => abschnitt.titel === "Anbieter")?.absaetze.join(" ");
+    expect(anbieter).toContain("Dammstraße 59");
+    expect(anbieter).toContain("65462 Ginsheim-Gustavsburg");
+    expect(datenschutz.flatMap((abschnitt) => abschnitt.absaetze).join(" ")).toContain("Dammstraße 59, 65462 Ginsheim-Gustavsburg");
+    expect(alleTexte.join(" ")).not.toMatch(/Universitätsstraße|55116|Mainz/);
+  });
+
   it("verlinken die Homepage", () => {
     const links = impressum.flatMap((abschnitt) => abschnitt.links ?? []);
     expect(links).toContainEqual({ text: "Homepage: tobeworks.de", url: "https://tobeworks.de" });

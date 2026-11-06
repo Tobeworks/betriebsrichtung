@@ -5,7 +5,8 @@ export const impressum: Abschnitt[] = [
     titel: "Anbieter",
     absaetze: [
       "Tobias Lorsbach, Tobeworks",
-      "Neue Universitätsstraße 7, 55116 Mainz",
+      "Dammstraße 59",
+      "65462 Ginsheim-Gustavsburg",
     ],
     links: [{ text: "Homepage: tobeworks.de", url: "https://tobeworks.de" }],
   },
@@ -37,7 +38,7 @@ export const datenschutz: Abschnitt[] = [
   {
     titel: "Verantwortlicher",
     absaetze: [
-      "Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Seite ist Tobias Lorsbach, Tobeworks, Neue Universitätsstraße 7, 55116 Mainz, E-Mail hallo@tobeworks.de.",
+      "Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Seite ist Tobias Lorsbach, Tobeworks, Dammstraße 59, 65462 Ginsheim-Gustavsburg, E-Mail hallo@tobeworks.de.",
     ],
   },
   {
