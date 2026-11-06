@@ -5,11 +5,11 @@ Stand: 2026-10-16. Paket `jobs/src/betriebsrichtung_jobs`, nur Standardbibliothe
 ## Befehle
 
 ```
-python -m betriebsrichtung_jobs metar [--trockenlauf]
+python -m betriebsrichtung_jobs metar [--trockenlauf] [--stunden 1-168]
 python -m betriebsrichtung_jobs forecast --lauf-nummer 1-99 [--archiv DIR] [--trockenlauf]
 ```
 
-- `metar`: holt die METAR-Meldungen von EDDF der letzten 24 Stunden, speichert sie als Winddaten (`wind-observations`). Daraus rechnet die API die geschätzte Wahrheit (siehe unten).
+- `metar`: holt die METAR-Meldungen von EDDF der letzten 24 Stunden (`--stunden` bis 168 für einen Nachtrag, aviationweather liefert höchstens 7 Tage), speichert sie als Winddaten (`wind-observations`) und als Wetterbeobachtungen (`weather-observations`, siehe unten). Daraus rechnet die API die geschätzte Wahrheit (siehe unten).
 - `forecast`: holt für jedes Modell in `jobs/config/forecast.json` das 14-Tage-Ensemble, rechnet Ostwahrscheinlichkeiten je Zeitfenster und schreibt den Lauf atomar (`forecast-configs`, `forecast-runs`).
 - `--trockenlauf`: rechnet und gibt aus, schreibt nichts und archiviert nichts.
 - Ein Lauf protokolliert sich am Ende mit einem Eintrag in `job-runs`.
@@ -67,6 +67,17 @@ Solange keine Quelle für die geflogene Richtung angebunden ist, schätzt die **
 - **Anzeige:** Das Frontend zeigt die Schätzung als Anteil ("geschätzt: Ost"), kräftig gefärbt. Prognosen sind blass und gestrichelt ("Prognose: ...").
 - **Prüfung:** Gegen die Umwelthaus-Anzeige vom 17.10.2026 stimmen alle Fenster seit dem 13.10. bis auf den Beginn von Ost am 17.10.: Die DFS wechselte um 11:16 Uhr bei etwa 3 kn Rückenwind (Nordwind), die Rechnung erst bei mehr als 4 kn am Nachmittag.
 - **Grenze:** Die Schätzung nutzt Wind und Hysterese, aber nicht alles, was die DFS berücksichtigt (Höhenwind, Pilotenmeldungen, Bahn 18). Sie taugt auch nicht, um die Prognose zu bewerten, weil sie vom selben Wind abhängt.
+
+## Wetterdaten (Tabelle `weather_observation`)
+
+Der `metar`-Job speichert neben dem Wind das Wetter derselben Meldung: Temperatur, Taupunkt, Luftdruck (QNH), Böen, Hauptsicht in Metern, Wolkenuntergrenze (unterste Schicht BKN, OVC oder VV, in Fuß), Niederschlag, Gewitter und die Wettergruppen als Text. Gespeichert wird je Meldung eine Zeile, eindeutig über Zeitpunkt und Quelle, ein erneuter Abruf legt nichts doppelt an.
+
+- **Warum jetzt:** Aus dem Wetter lässt sich später prüfen, was Ostphasen gemeinsam haben. Die Historie lässt sich nicht nachholen: aviationweather.gov liefert höchstens 7 Tage zurück.
+- **Sicht:** Die JSON-Antwort deckelt sie bei "6+" Meilen, deshalb liest der Job die Meter aus dem Rohtext (vierstellige Gruppe nach dem Wind, CAVOK gilt als 9999). Die kleinere Minimalsicht mit Richtung (zum Beispiel `9999 0900`) zählt nicht.
+- **Niederschlag und Gewitter** kommen aus den Wettergruppen der Rohmeldung. Eine Gruppe mit `VC` (in der Nähe) zählt nicht, `VCTS` ist also kein Gewitter am Platz.
+- **Ausfall:** Scheitert nur das Wetter (zum Beispiel weil die Tabelle in der Datenbank fehlt), bleiben die Winddaten gespeichert, der Lauf endet als `partial` mit der Fehlermeldung im Laufprotokoll.
+- **Anzeige:** `GET /betriebsrichtung/v1/weather?days=` bildet je Richtung (Ost, West) den Mittelwert über alle Meldungen der abgelaufenen Fenster mit Wahrheit (`api/betriebsrichtung_wetter.py`). Die Statistik zeigt es als Tabelle "Wetter bei Ost und West". Das ist eine Einordnung und keine Begründung der Richtung.
+- **Einführung:** Vor dem Deploy der API die Tabelle in der Datenbank anlegen (`CREATE TABLE IF NOT EXISTS` aus `db/2026-10-16_01_create_betriebsrichtung.sql` legt nur die neue Tabelle an). Danach den Nachtrag der letzten 7 Tage einmal laufen lassen (siehe README).
 
 ## Bekannte Grenzen (ehrlich)
 

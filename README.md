@@ -122,6 +122,7 @@ Then run `pnpm dev` in `frontend/` (it proxies `/betriebsrichtung` to `127.0.0.1
 Good to know:
 - **One forecast run per number and day.** A second call with the same `--lauf-nummer` on the same day answers `vorhanden` and writes nothing. For repeated local runs use a free number between 1 and 99 (for example 4, 5, 6).
 - **Other settings.** `BETRIEBSRICHTUNG_CONFIG=/path/to/forecast.json` uses another configuration, for example to try different thresholds in a dry run. `--archiv DIR` (or `BETRIEBSRICHTUNG_ARCHIV_DIR`) also stores the raw ensemble data.
+- **Weather.** The `metar` job also stores the weather of each report (visibility, clouds, precipitation, pressure and more) in `weather_observation`. For an existing database create the table first (`CREATE TABLE IF NOT EXISTS` in `db/2026-10-16_01_create_betriebsrichtung.sql`), then run `pnpm dev:metar --stunden 168` once to load the last 7 days (the source offers no more). The statistics page compares the weather of East and West windows.
 - **Windows that already started** show no forecast. The API estimates their truth from the stored wind observations (`status estimated`), so run `pnpm dev:metar` to keep the wind data current.
 - **Exit code.** A failed run exits with a non-zero code and prints the reason. The same run on the cluster is described in [docs/jobs.md](docs/jobs.md#cronjob-auf-dem-cluster-auslösen).
 

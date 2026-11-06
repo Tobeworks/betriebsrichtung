@@ -72,17 +72,15 @@ def test_metar_beobachtung_besteht_das_schema():
     _pruefer("wind_observation.schema.json").validate(eintrag)
 
 
-def test_geschaetzte_fenster_bestehen_das_slot_schema():
-    konf = konfiguration.laden()
-    start = datetime(2026, 10, 17, 4, tzinfo=timezone.utc)
-    beobachtungen = [
-        {"observed_at": modell.iso(start + timedelta(hours=h, minutes=20))[:19] + "Z", "speed_kn": 10.0,
-         "direction_deg": 70.0, "source": "metar"}
-        for h in range(11)
+def test_wetterbeobachtungen_bestehen_das_wetter_schema():
+    rohdaten = [
+        {"obsTime": 1792176600, "temp": 9, "dewp": 7, "altim": 1022, "wgst": 22, "clouds": [{"cover": "BKN", "base": 900}],
+         "rawOb": "METAR EDDF 161650Z AUTO 25015G22KT 6000 -RA BKN009 09/07 Q1022 NOSIG"},
+        {"obsTime": 1792178400, "temp": None, "dewp": None, "altim": None, "clouds": [], "rawOb": "METAR EDDF 161720Z AUTO VRB02KT CAVOK"},
     ]
-    zeilen = modell.schaetze_fenster(beobachtungen, konf, datetime(2026, 10, 17, 15, 17, tzinfo=timezone.utc))
-    assert zeilen
-    pruefer = _pruefer("slot_actual.schema.json")
+    pruefer = _pruefer("weather_observation.schema.json")
+    zeilen = quellen.wetter_parsen(rohdaten)
+    assert len(zeilen) == 2
     for zeile in zeilen:
-        assert not list(pruefer.iter_errors(zeile)), zeile
+        assert not list(pruefer.iter_errors({**zeile, "recorded_at": "2026-10-17T11:00:00.000Z"})), zeile
 

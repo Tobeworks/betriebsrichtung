@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/weather.response.schema.json",
+  "title": "Antwort Wetter bei Ost und West",
+  "description": "Für GET /betriebsrichtung/v1/weather: Wetter in den abgelaufenen Zeitfenstern, getrennt nach der Richtung des Fensters (Wahrheit, beobachtet oder aus Messwind geschätzt). Mittelwerte über alle Meldungen der Fenster. Das ist eine Einordnung und keine Begründung der Betriebsrichtung.",
+  "type": "object",
+  "x-schema-version": 1,
+  "required": ["schema", "generated_at", "days", "weather_since", "estimated_share", "groups"],
+  "properties": {
+    "schema": { "const": 1 },
+    "generated_at": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+    "days": { "type": "integer", "minimum": 1, "maximum": 365, "description": "Betrachteter Zeitraum in Tagen bis heute." },
+    "weather_since": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/lokales_datum" }, { "type": "null" }],
+      "description": "Ältester Tag mit gespeichertem Wetter, null ohne Wetterdaten."
+    },
+    "estimated_share": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }],
+      "description": "Anteil der Fenster, deren Richtung aus Messwind geschätzt ist, null ohne Fenster."
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "direction", "windows", "observations", "wind_speed_kn", "wind_direction_deg", "temperature_c", "pressure_hpa",
+          "visibility_km", "precipitation_share", "low_ceiling_share", "thunderstorm_share"
+        ],
+        "properties": {
+          "direction": { "$ref": "common.schema.json#/$defs/betriebsrichtung" },
+          "windows": { "type": "integer", "minimum": 0, "description": "Fenster dieser Richtung mit mindestens einer Wettermeldung." },
+          "observations": { "type": "integer", "minimum": 0, "description": "Anzahl der Wettermeldungen in diesen Fenstern." },
+          "wind_speed_kn": { "type": ["number", "null"], "minimum": 0 },
+          "wind_direction_deg": {
+            "anyOf": [{ "$ref": "common.schema.json#/$defs/richtung_grad" }, { "type": "null" }],
+            "description": "Mittlere Windrichtung, vektoriell gemittelt."
+          },
+          "temperature_c": { "type": ["number", "null"] },
+          "pressure_hpa": { "type": ["number", "null"] },
+          "visibility_km": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+          "precipitation_share": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] },
+          "low_ceiling_share": {
+            "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }],
+            "description": "Anteil der Meldungen mit Wolkenuntergrenze unter 1000 Fuß."
+          },
+          "thunderstorm_share": { "anyOf": [{ "$ref": "common.schema.json#/$defs/anteil" }, { "type": "null" }] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,4 +1,5 @@
 import json
+import re
 import time
 import urllib.parse
 import urllib.request
@@ -96,5 +97,82 @@ def metar_parsen(eintraege):
     return list(ausgabe.values())
 
 
+WIND_GRUPPE = re.compile(r"^(\d{3}|VRB)\d{2,3}(G\d{2,3})?(KT|MPS)$")
+RICHTUNGSSCHWANKUNG = re.compile(r"^\d{3}V\d{3}$")
+SICHT_GRUPPE = re.compile(r"^\d{4}$")
+_PHAENOMEN = "(?:DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)"
+_BESCHREIBER = "(?:MI|BC|PR|DR|BL|SH|TS|FZ)"
+WETTER_GRUPPE = re.compile(rf"^[-+]?(?:VC)?(?:{_BESCHREIBER}(?:{_PHAENOMEN})*|(?:{_PHAENOMEN})+)$")
+NIEDERSCHLAG = re.compile(r"DZ|RA|SN|SG|IC|PL|GR|GS|UP")
+DICKE_WOLKEN = ("BKN", "OVC", "VV")
+
+
+def _sicht_aus_rohtext(rohtext):
+    """Hauptsicht in Metern aus der Rohmeldung: CAVOK gilt als 9999, sonst die vierstellige Gruppe nach dem Wind."""
+    gruppen = (rohtext or "").split()
+    if "CAVOK" in gruppen:
+        return 9999
+    for index, gruppe in enumerate(gruppen):
+        if WIND_GRUPPE.match(gruppe):
+            nachfolger = index + 1
+            if nachfolger < len(gruppen) and RICHTUNGSSCHWANKUNG.match(gruppen[nachfolger]):
+                nachfolger += 1
+            if nachfolger < len(gruppen) and SICHT_GRUPPE.match(gruppen[nachfolger]):
+                return int(gruppen[nachfolger])
+            return None
+    return None
+
+
+def _erscheinungen(rohtext):
+    """Wettergruppen der Rohmeldung (zum Beispiel -RA oder BR), ohne Bemerkungen nach RMK."""
+    ergebnis = []
+    for gruppe in (rohtext or "").split():
+        if gruppe == "RMK":
+            break
+        if WETTER_GRUPPE.match(gruppe):
+            ergebnis.append(gruppe)
+    return ergebnis
+
+
+def _wolkenuntergrenze(wolken):
+    """Unterste durchbrochene oder geschlossene Schicht (BKN, OVC, VV) in Fuß, None ohne eine solche."""
+    basen = [int(w["base"]) for w in wolken or [] if w.get("cover") in DICKE_WOLKEN and w.get("base") is not None]
+    return min(basen) if basen else None
+
+
+def wetter_parsen(eintraege):
+    """METAR-Einträge (JSON von aviationweather.gov) zu Wetterbeobachtungen nach weather_observation.schema.json."""
+    ausgabe = {}
+    for eintrag in eintraege:
+        if eintrag.get("obsTime") is None:
+            continue
+        zeit = datetime.fromtimestamp(int(eintrag["obsTime"]), tz=timezone.utc)
+        erscheinungen = _erscheinungen(eintrag.get("rawOb"))
+        ohne_umgebung = [g for g in erscheinungen if not g.lstrip("-+").startswith("VC")]
+        druck = eintrag.get("altim")
+        ausgabe[zeit.isoformat()] = {
+            "observed_at": zeit.strftime("%Y-%m-%dT%H:%M:%S") + "Z",
+            "source": "metar",
+            "temperature_c": _zahl(eintrag.get("temp")),
+            "dewpoint_c": _zahl(eintrag.get("dewp")),
+            "pressure_hpa": _zahl(druck) if druck is not None and 850 <= float(druck) <= 1100 else None,
+            "gust_kn": _zahl(eintrag.get("wgst")),
+            "visibility_m": _sicht_aus_rohtext(eintrag.get("rawOb")),
+            "ceiling_ft": _wolkenuntergrenze(eintrag.get("clouds")),
+            "precipitation": any(NIEDERSCHLAG.search(g) for g in ohne_umgebung),
+            "thunderstorm": any("TS" in g for g in ohne_umgebung),
+            "phenomena": " ".join(erscheinungen)[:40] or None,
+        }
+    return list(ausgabe.values())
+
+
+def _zahl(wert):
+    return None if wert is None else float(wert)
+
+
+def metar_rohdaten_holen(icao="EDDF", stunden=24):
+    return json.loads(abrufen(metar_url(icao, stunden)))
+
+
 def metar_holen(icao="EDDF", stunden=24):
-    return metar_parsen(json.loads(abrufen(metar_url(icao, stunden))))
+    return metar_parsen(metar_rohdaten_holen(icao, stunden))

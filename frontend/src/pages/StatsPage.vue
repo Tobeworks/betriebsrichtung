@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { holeZeitachse } from "../api/client";
 import HistorieListe from "../components/stats/HistorieListe.vue";
+import WetterVergleich from "../components/stats/WetterVergleich.vue";
 import TagesBalken from "../components/stats/TagesBalken.vue";
 import { texte } from "../config/texte";
 import { useLaden } from "../composables/useLaden";
@@ -105,6 +106,8 @@ const slots = ["morning", "afternoon", "night"] as const;
           </li>
         </ul>
       </section>
+
+      <WetterVergleich :tage="rueckblick" />
 
       <HistorieListe :eintraege="daten!.items" />
 

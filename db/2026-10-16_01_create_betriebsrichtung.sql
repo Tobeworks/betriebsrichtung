@@ -123,6 +123,24 @@ CREATE TABLE IF NOT EXISTS `source_heartbeat` (
   KEY `idx_heartbeat_source_checked` (`source`, `checked_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `weather_observation` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+  `observed_at` DATETIME(3) NOT NULL,
+  `source` VARCHAR(32) NOT NULL,
+  `temperature_c` DOUBLE NULL,
+  `dewpoint_c` DOUBLE NULL,
+  `pressure_hpa` DOUBLE NULL,
+  `gust_kn` DOUBLE NULL,
+  `visibility_m` SMALLINT UNSIGNED NULL,
+  `ceiling_ft` MEDIUMINT UNSIGNED NULL,
+  `precipitation` TINYINT(1) NOT NULL,
+  `thunderstorm` TINYINT(1) NOT NULL,
+  `phenomena` VARCHAR(40) NULL,
+  `recorded_at` DATETIME(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_weather_observation` (`observed_at`, `source`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `wind_aggregate` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
   `run_id` BIGINT UNSIGNED NOT NULL,

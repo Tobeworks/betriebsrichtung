@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import api, archiv, konfiguration, modell, quellen
 
-JOB_VERSION = "2.2.6"
+JOB_VERSION = "2.2.7"
 ENV_DATEI = Path(__file__).resolve().parents[2] / ".env"
 
 
@@ -51,23 +51,26 @@ def metar(args):
     start = jetzt()
     status, fehler, geschrieben, gelesen = "ok", None, 0, 0
     try:
-        beobachtungen = quellen.metar_holen(stunden=args.stunden)
+        rohdaten = quellen.metar_rohdaten_holen(stunden=args.stunden)
+        beobachtungen = quellen.metar_parsen(rohdaten)
+        wetter = quellen.wetter_parsen(rohdaten)
         gelesen = len(beobachtungen)
         nutzlast = [{**b, "recorded_at": modell.iso(start)} for b in beobachtungen]
-        fenster = modell.schaetze_fenster(beobachtungen, konfiguration.laden(), start)
+        wetter_nutzlast = [{**w, "recorded_at": modell.iso(start)} for w in wetter]
         if args.trockenlauf:
-            print(json.dumps({"beobachtungen": len(nutzlast), "geschaetzte_fenster": fenster, "beispiel": nutzlast[:2]},
-                             ensure_ascii=False, indent=2))
+            print(json.dumps({"beobachtungen": len(nutzlast), "wetter": len(wetter_nutzlast),
+                              "beispiel": nutzlast[:2], "wetter_beispiel": wetter_nutzlast[:2]}, ensure_ascii=False, indent=2))
             return 0
         basis, token = api.konfiguration_aus_umgebung()
         antwort = api.senden(basis, token, "wind-observations", nutzlast)
         geschrieben = antwort.get("neu", 0)
-        if fenster:
+        if wetter_nutzlast:
+            # Das Wetter ist Beiwerk: Scheitert es, bleiben die Winddaten gespeichert und der Lauf gilt als teilweise gelungen.
             try:
-                api.senden(basis, token, "slot-actuals", fenster)
+                api.senden(basis, token, "weather-observations", wetter_nutzlast)
             except Exception as ausnahme:
-                status, fehler = "partial", f"slot-actuals: {ausnahme}"
-                print(f"metar: Schätzung nicht gespeichert: {ausnahme}", file=sys.stderr)
+                status, fehler = "partial", f"weather-observations: {ausnahme}"
+                print(f"metar: Wetter nicht gespeichert: {ausnahme}", file=sys.stderr)
         protokollieren(basis, token, jobprotokoll("metar", start, status, gelesen, geschrieben, fehler))
         return 0
     except Exception as ausnahme:

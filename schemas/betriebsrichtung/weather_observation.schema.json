@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/weather_observation.schema.json",
+  "title": "Wetterbeobachtung",
+  "description": "Gemessenes Wetter an einer Station neben dem Wind (wind_observation, gleicher Zeitpunkt und gleiche Quelle). Dient der Einordnung: Welches Wetter herrschte in Zeiträumen mit Ost oder West. Das Wetter erklärt die Richtung nicht, die DFS entscheidet nach mehr als dem Wetter am Boden. Fehlt eine Angabe in der Meldung, ist sie null.",
+  "type": "object",
+  "x-schema-version": 1,
+  "x-db": {
+    "table": "weather_observation",
+    "primaryKey": ["id"],
+    "unique": [{ "name": "uq_weather_observation", "columns": ["observed_at", "source"] }]
+  },
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "x-db": { "type": "BIGINT UNSIGNED", "autoIncrement": true } },
+    "observed_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/windquelle",
+      "x-db": { "type": "VARCHAR(32)" }
+    },
+    "temperature_c": {
+      "description": "Lufttemperatur in Grad Celsius.",
+      "type": ["number", "null"],
+      "minimum": -90,
+      "maximum": 60,
+      "x-db": { "type": "DOUBLE" }
+    },
+    "dewpoint_c": {
+      "description": "Taupunkt in Grad Celsius.",
+      "type": ["number", "null"],
+      "minimum": -90,
+      "maximum": 60,
+      "x-db": { "type": "DOUBLE" }
+    },
+    "pressure_hpa": {
+      "description": "Luftdruck auf Meereshöhe (QNH) in Hektopascal.",
+      "type": ["number", "null"],
+      "minimum": 850,
+      "maximum": 1100,
+      "x-db": { "type": "DOUBLE" }
+    },
+    "gust_kn": {
+      "description": "Windböe in Knoten, null ohne Böenangabe.",
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 200,
+      "x-db": { "type": "DOUBLE" }
+    },
+    "visibility_m": {
+      "description": "Hauptsicht in Metern, 9999 steht für 10 Kilometer und mehr (auch CAVOK).",
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 9999,
+      "x-db": { "type": "SMALLINT UNSIGNED" }
+    },
+    "ceiling_ft": {
+      "description": "Untergrenze der untersten durchbrochenen oder geschlossenen Wolkenschicht (BKN, OVC) in Fuß über Grund, null ohne eine solche Schicht.",
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 99999,
+      "x-db": { "type": "MEDIUMINT UNSIGNED" }
+    },
+    "precipitation": {
+      "description": "true bei Niederschlag in der Meldung (Regen, Nieselregen, Schnee, Hagel und ähnliche).",
+      "type": "boolean",
+      "x-db": { "type": "TINYINT(1)" }
+    },
+    "thunderstorm": {
+      "description": "true bei Gewitter in der Meldung (TS).",
+      "type": "boolean",
+      "x-db": { "type": "TINYINT(1)" }
+    },
+    "phenomena": {
+      "description": "Wettererscheinungen der Meldung als Text, zum Beispiel -RA oder BR, null ohne Angabe.",
+      "type": ["string", "null"],
+      "maxLength": 40,
+      "x-db": { "type": "VARCHAR(40)" }
+    },
+    "recorded_at": {
+      "$ref": "common.schema.json#/$defs/zeitpunkt",
+      "x-db": { "type": "DATETIME(3)" }
+    }
+  },
+  "required": [
+    "observed_at", "source", "temperature_c", "dewpoint_c", "pressure_hpa", "gust_kn", "visibility_m",
+    "ceiling_ft", "precipitation", "thunderstorm", "phenomena", "recorded_at"
+  ],
+  "additionalProperties": false
+}

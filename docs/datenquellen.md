@@ -57,7 +57,7 @@ Echte Beobachtung vor Ableitung aus Flugdaten vor Windschätzung. Jede Stufe wir
 - **Entscheidung (Tobias, 17.10.2026):** Was öffentlich abrufbar ist, darf abgefragt werden, eine Anfrage beim Betreiber ist nicht nötig. Die Seite ist bisher nicht angebunden. Die Prognose diente nur als Vergleichswert für die Bandgrenzen des Entscheidungsmodells (`docs/jobs.md`). Als Quelle für die tatsächlich geflogene Richtung wäre sie ein Kandidat, falls die Anbindung gewünscht ist.
 - **Auch offen:** DFS als Quelle der Betriebsrichtung. Ob die DFS eine maschinenlesbare Information veröffentlicht, ist nicht geprüft.
 
-## 3. METAR EDDF (Wind am Flughafen)
+## 3. METAR EDDF (Wind und Wetter am Flughafen)
 
 - **Quelle:** aviationweather.gov, Datenbereich `/api/data`.
 - **Endpunkt (aus der Doku):** `https://aviationweather.gov/api/data/metar?ids=EDDF&format=json`. Formate: Rohtext, JSON, GeoJSON, CSV, XML, IWXXM.
@@ -66,7 +66,7 @@ Echte Beobachtung vor Ableitung aus Flugdaten vor Windschätzung. Jede Stufe wir
 - **SPECI:** Ob Sonderberichte enthalten sind, ist nicht geprüft.
 - **Nutzung:** Der Plan sieht stündlichen Abruf vor (Plan 9). Das liegt weit unter dem Limit.
 - **Entscheidung:** Primärquelle für die Wind-Beobachtung am Flughafen. Sie liefert die Messung, auf der die Kalibrierung Stufe 1 aufsetzt. Die METAR enthält keine Betriebsrichtung. Die Richtung wird aus dem Wind abgeleitet (Plan 4b).
-- **Offen:** Testabruf mit `ids=EDDF` und Prüfung der Felder (Windrichtung, Windstärke, Zeitstempel). Vor dem ersten Job nachholen.
+- **Geprüft (17.10. und 6.11.2026):** Der Testabruf liefert Windrichtung, -stärke, Böen, Temperatur, Taupunkt, Luftdruck (hPa), Wolkenschichten, Wettergruppen und den Rohtext, zwei Meldungen pro Stunde (:20 und :50). Mit `hours=168` kommen 336 Meldungen. Die Sicht steht in der JSON-Antwort nur gedeckelt ("6+" Meilen), die Meter stehen im Rohtext. Der Job speichert Wind und Wetter (siehe `docs/jobs.md`).
 
 ## 4. IEM ASOS (historischer METAR-Wind)
 

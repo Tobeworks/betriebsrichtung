@@ -67,6 +67,18 @@ export function formatTagMonat(lokalesDatum: string): string {
   return `${lokalesDatum.slice(8, 10)}.${lokalesDatum.slice(5, 7)}.`;
 }
 
+const WINDROSE = ["N", "NNO", "NO", "ONO", "O", "OSO", "SO", "SSO", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+
+// Himmelsrichtung auf Deutsch (16 Sektoren), woher der Wind kommt.
+export function himmelsrichtung(grad: number): string {
+  return WINDROSE[Math.round((((grad % 360) + 360) % 360) / 22.5) % 16];
+}
+
+// Zahl mit deutschem Komma und fester Nachkommastelle.
+export function zahl(wert: number, stellen = 1): string {
+  return wert.toFixed(stellen).replace(".", ",");
+}
+
 export function formatUhrzeit(zeitpunkt: string): string {
   return uhrzeitFormat.format(new Date(zeitpunkt));
 }
