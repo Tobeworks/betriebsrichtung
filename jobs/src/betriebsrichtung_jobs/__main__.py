@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import api, archiv, konfiguration, modell, quellen
 
-JOB_VERSION = "2.2.8"
+JOB_VERSION = "2.2.9"
 ENV_DATEI = Path(__file__).resolve().parents[2] / ".env"
 
 
