@@ -24,6 +24,12 @@ export interface Statistik {
   geschaetztAnteil: number | null;
 }
 
+// Eine volle Stunde aus der Stundenreihe der API: Beginn (ms seit Epoche) und Richtung (1 Ost, 0 West).
+export interface Stunde {
+  start: number;
+  east: number;
+}
+
 interface Wahrheit {
   start: number;
   ende: number;
@@ -32,6 +38,9 @@ interface Wahrheit {
   ost: number;
   geschaetzt: boolean;
 }
+
+const STUNDE = 3600000;
+const tagFormat = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Europe/Berlin" });
 
 // Ostanteil der Wahrheit eines Fensters (beobachtet oder aus Messwind geschätzt), null für Prognose, laufendes Fenster und Lücke.
 export function wahrheitsAnteil(e: Eintrag): number | null {
@@ -58,29 +67,45 @@ function gewichtet(liste: Wahrheit[]): number {
   return liste.reduce((summe, w) => summe + w.ost * (w.ende - w.start), 0) / dauer;
 }
 
-// Längste lückenlose Folge von Fenstern, für die zaehlt zutrifft, in Stunden. Eine Lücke oder ein Fenster der anderen Richtung beendet sie.
-function laengstePhase(liste: Wahrheit[], zaehlt: (ost: number) => boolean): number {
-  let phase = 0;
-  let laengste = 0;
-  let vorher: Wahrheit | null = null;
-  for (const w of liste) {
-    const anschluss = vorher !== null && Math.abs(w.start - vorher.ende) < 60000;
-    phase = zaehlt(w.ost) ? (anschluss && phase > 0 ? phase : 0) + (w.ende - w.start) : 0;
-    laengste = Math.max(laengste, phase);
-    vorher = w;
-  }
-  return Math.round(laengste / 3600000);
+// Lokales Datum (Europe/Berlin) einer Stunde im Format JJJJ-MM-TT.
+export function tagVon(zeit: number): string {
+  const teile = tagFormat.formatToParts(new Date(zeit));
+  const wert = (typ: string) => teile.find((t) => t.type === typ)?.value ?? "";
+  return `${wert("year")}-${wert("month")}-${wert("day")}`;
 }
 
-export function statistik(eintraege: Eintrag[]): Statistik {
-  const liste = wahrheiten(eintraege);
-  const nachTag = new Map<string, Wahrheit[]>();
-  for (const w of liste) {
-    nachTag.set(w.datum, [...(nachTag.get(w.datum) ?? []), w]);
+// Tage zählen nach der Mehrheit ihrer Stunden: mehr als die Hälfte Ost ist Ost. Der Anteil eines Tags ist das Stunden-Mittel.
+export function tageNachStunden(stunden: Stunde[]): Tagesanteil[] {
+  const nachTag = new Map<string, { ost: number; stunden: number }>();
+  for (const h of stunden) {
+    const datum = tagVon(h.start);
+    const t = nachTag.get(datum) ?? { ost: 0, stunden: 0 };
+    t.ost += h.east;
+    t.stunden += 1;
+    nachTag.set(datum, t);
   }
-  const tage = [...nachTag]
-    .map(([datum, ws]) => ({ datum, ost: gewichtet(ws), fenster: ws.length }))
+  return [...nachTag]
+    .map(([datum, t]) => ({ datum, ost: t.ost / t.stunden, fenster: t.stunden }))
     .sort((a, b) => a.datum.localeCompare(b.datum));
+}
+
+// Längste lückenlose Folge gleicher Stunden (Ost oder West), in Stunden. Eine Lücke in der Stundenreihe bricht sie.
+export function laengstePhase(stunden: Stunde[], wert: 0 | 1): number {
+  let phase = 0;
+  let laengste = 0;
+  let vorher: number | null = null;
+  for (const h of stunden) {
+    const anschluss = vorher !== null && h.start - vorher === STUNDE;
+    phase = h.east === wert ? (anschluss ? phase : 0) + 1 : 0;
+    laengste = Math.max(laengste, phase);
+    vorher = h.start;
+  }
+  return laengste;
+}
+
+export function statistik(eintraege: Eintrag[], stunden: Stunde[] = []): Statistik {
+  const liste = wahrheiten(eintraege);
+  const tage = tageNachStunden(stunden);
 
   const profil = (slot: Eintrag["slot"]): Profil | null => {
     const ws = liste.filter((w) => w.slot === slot);
@@ -90,10 +115,10 @@ export function statistik(eintraege: Eintrag[]): Statistik {
   return {
     tage,
     fenster: liste.length,
-    ostanteil: liste.length === 0 ? null : gewichtet(liste),
+    ostanteil: stunden.length > 0 ? stunden.reduce((s, h) => s + h.east, 0) / stunden.length : liste.length === 0 ? null : gewichtet(liste),
     tageMitOst: tage.filter((t) => t.ost > 0.5).length,
-    laengsteOstphaseStunden: laengstePhase(liste, (ost) => ost > 0.5),
-    laengsteWestphaseStunden: laengstePhase(liste, (ost) => ost < 0.5),
+    laengsteOstphaseStunden: laengstePhase(stunden, 1),
+    laengsteWestphaseStunden: laengstePhase(stunden, 0),
     profil: { morning: profil("morning"), afternoon: profil("afternoon"), night: profil("night") },
     von: tage[0]?.datum ?? null,
     bis: tage[tage.length - 1]?.datum ?? null,

@@ -1,26 +1,31 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { holeZeitachse } from "../api/client";
+import { holeStunden, holeZeitachse } from "../api/client";
 import HistorieListe from "../components/stats/HistorieListe.vue";
 import WetterVergleich from "../components/stats/WetterVergleich.vue";
 import TagesBalken from "../components/stats/TagesBalken.vue";
 import { texte } from "../config/texte";
 import { useLaden } from "../composables/useLaden";
 import { formatDauerKurz, formatTagMonat, ganzProzent, lokalesDatum } from "../lib/format";
-import { statistik } from "../lib/statistik";
+import { statistik, type Stunde } from "../lib/statistik";
 import { slotName } from "../lib/zeitachse";
 
 // Die API liefert höchstens 92 Tage je Anfrage.
 const ZEITRAEUME = [30, 90] as const;
 const rueckblick = ref<number>(30);
 
-const { daten, laedt, fehler, laden } = useLaden((signal) => {
+// Zeitachse und Stundenreihe kommen gemeinsam, beide beschreiben denselben Zeitraum.
+const { daten, laedt, fehler, laden } = useLaden(async (signal) => {
   const jetzt = Date.now();
-  return holeZeitachse(lokalesDatum(new Date(jetzt - rueckblick.value * 86400000)), lokalesDatum(new Date(jetzt)), signal);
+  const [zeitachse, stunden] = await Promise.all([
+    holeZeitachse(lokalesDatum(new Date(jetzt - rueckblick.value * 86400000)), lokalesDatum(new Date(jetzt)), signal),
+    holeStunden(rueckblick.value, signal),
+  ]);
+  return { zeitachse, stunden: stunden.hours.map((h): Stunde => ({ start: Date.parse(h.start), east: h.east })) };
 });
 watch(rueckblick, () => laden());
 
-const s = computed(() => (daten.value ? statistik(daten.value.items) : null));
+const s = computed(() => (daten.value ? statistik(daten.value.zeitachse.items, daten.value.stunden) : null));
 const slots = ["morning", "afternoon", "night"] as const;
 </script>
 
@@ -109,7 +114,7 @@ const slots = ["morning", "afternoon", "night"] as const;
 
       <WetterVergleich :tage="rueckblick" />
 
-      <HistorieListe :eintraege="daten!.items" />
+      <HistorieListe :eintraege="daten!.zeitachse.items" />
 
       <footer class="hairline flex flex-col gap-2 border-x-0 border-b-0 pt-6 text-fine">
         <p>{{ texte.statistik.tageMitOstErklaerung }}</p>

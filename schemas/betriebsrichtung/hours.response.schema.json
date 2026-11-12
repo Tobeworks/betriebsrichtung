@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://betriebsrichtung.tobeworks.de/schema/hours.response.schema.json",
+  "title": "Antwort Stunden",
+  "description": "Für GET /betriebsrichtung/v1/hours: der geschätzte Ostzustand je volle UTC-Stunde aus gemessenem Wind. Grundlage für die Auswertung nach Mehrheit der Stunden in der Statistik. Eine Stunde ist entweder Ost (1) oder West (0), nie eine Mischung.",
+  "type": "object",
+  "x-schema-version": 1,
+  "required": ["schema", "generated_at", "days", "hours"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": 1 },
+    "generated_at": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+    "days": { "type": "integer", "minimum": 1, "maximum": 365 },
+    "hours": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["start", "east"],
+        "additionalProperties": false,
+        "properties": {
+          "start": { "$ref": "common.schema.json#/$defs/zeitpunkt" },
+          "east": { "type": "integer", "enum": [0, 1] }
+        }
+      }
+    }
+  }
+}

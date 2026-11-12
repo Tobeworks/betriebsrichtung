@@ -1,5 +1,6 @@
 import type { Fehlerantwort } from "./generated/error";
 import type { AntwortPrognosegute } from "./generated/evaluation.response";
+import type { AntwortStunden } from "./generated/hours.response";
 import type { AntwortWetterBeiOstUndWest } from "./generated/weather.response";
 import type { AntwortZeitachse } from "./generated/timeline.response";
 
@@ -27,6 +28,10 @@ export function holeZeitachse(von: string, bis: string, signal?: AbortSignal): P
 
 export function holeGuete(tage: number, signal?: AbortSignal): Promise<AntwortPrognosegute> {
   return anfrage<AntwortPrognosegute>(`/evaluation?days=${tage}`, signal);
+}
+
+export function holeStunden(tage: number, signal?: AbortSignal): Promise<AntwortStunden> {
+  return anfrage<AntwortStunden>(`/hours?days=${tage}`, signal);
 }
 
 export function holeWetter(tage: number, signal?: AbortSignal): Promise<AntwortWetterBeiOstUndWest> {

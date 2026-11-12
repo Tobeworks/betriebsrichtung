@@ -13,9 +13,14 @@ function antwort(items: unknown[]) {
 const wetterLeer = { schema: 1, generated_at: "2026-10-18T10:00:00.000Z", days: 30, weather_since: null, estimated_share: null, groups: [] };
 
 // Antwortet je nach Adresse mit der Zeitachse oder der Wetterauswertung.
-function holer(zeitachse: unknown, wetter: unknown = wetterLeer) {
-  return vi.fn(async (adresse: unknown) =>
-    new Response(JSON.stringify(String(adresse).includes("/weather") ? wetter : zeitachse), { status: 200 }));
+const stundenLeer = { schema: 1, generated_at: "2026-10-18T10:00:00.000Z", days: 30, hours: [] };
+
+function holer(zeitachse: unknown, wetter: unknown = wetterLeer, stunden: unknown = stundenLeer) {
+  return vi.fn(async (adresse: unknown) => {
+    const a = String(adresse);
+    const inhalt = a.includes("/weather") ? wetter : a.includes("/hours") ? stunden : zeitachse;
+    return new Response(JSON.stringify(inhalt), { status: 200 });
+  });
 }
 
 function fenster(slot: string, start: string, ende: string, share: number) {
@@ -27,7 +32,11 @@ describe("StatsPage", () => {
   it("zeigt Kennzahlen, Tagesdiagramm und Profil aus der Zeitachse", async () => {
     const items = [fenster("morning", "2026-10-17T04:00:00.000Z", "2026-10-17T12:00:00.000Z", 1),
       fenster("afternoon", "2026-10-17T12:00:00.000Z", "2026-10-17T20:00:00.000Z", 0)];
-    vi.stubGlobal("fetch", holer(antwort(items)));
+    const stunden = {
+      schema: 1, generated_at: "2026-10-18T10:00:00.000Z", days: 30,
+      hours: [0, 1, 2, 3, 4, 5, 6, 7].map((h) => ({ start: `2026-10-17T${String(4 + h).padStart(2, "0")}:00:00Z`, east: h < 4 ? 1 : 0 })),
+    };
+    vi.stubGlobal("fetch", holer(antwort(items), wetterLeer, stunden));
     const wrapper = mount(StatsPage);
     await flushPromises();
     expect(wrapper.text()).toContain("Ostanteil");
@@ -59,7 +68,9 @@ describe("StatsPage", () => {
   it("lädt mit der Zeitraum-Auswahl neu und zeigt die Historie", async () => {
     const gestern = lokalesDatum(new Date(Date.now() - 86400000));
     const items = [{ ...fenster("morning", `${gestern}T04:00:00.000Z`, `${gestern}T12:00:00.000Z`, 1), local_date: gestern }];
-    const abruf = holer(antwort(items));
+    const stunden = { schema: 1, generated_at: "2026-10-18T10:00:00.000Z", days: 30,
+      hours: [0, 1, 2, 3].map((h) => ({ start: `${gestern}T${String(4 + h).padStart(2, "0")}:00:00Z`, east: 1 })) };
+    const abruf = holer(antwort(items), wetterLeer, stunden);
     vi.stubGlobal("fetch", abruf);
     const wrapper = mount(StatsPage);
     await flushPromises();
